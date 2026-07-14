@@ -81,17 +81,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "NexCore EdTech is the Campus Operating System for African higher institutions — unifying smart attendance, academics, communication and analytics.",
+          "The Campus Operating System for African higher institutions: smart attendance, academics, communication, analytics — one unified platform.",
       },
       { name: "author", content: "NexCore EdTech" },
       { property: "og:title", content: "NexCore EdTech — Building Africa's Smart Campuses" },
       {
         property: "og:description",
         content:
-          "The intelligent Campus Operating System for universities, polytechnics and colleges across Africa.",
+          "The Campus Operating System for African higher institutions: smart attendance, academics, communication, analytics — one unified platform.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "NexCore EdTech — Building Africa's Smart Campuses" },
+      { name: "twitter:description", content: "The Campus Operating System for African higher institutions: smart attendance, academics, communication, analytics — one unified platform." },
+      { property: "og:image", content: "https://id-preview--4d41fe0d-5f1e-4681-953a-2eb01c691653.lovable.app/og-cover.jpg" },
+      { name: "twitter:image", content: "https://id-preview--4d41fe0d-5f1e-4681-953a-2eb01c691653.lovable.app/og-cover.jpg" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
