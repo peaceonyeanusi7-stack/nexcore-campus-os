@@ -21,6 +21,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StudentDashboardRouteImport } from './routes/student.dashboard'
 import { Route as LecturerDashboardRouteImport } from './routes/lecturer.dashboard'
+import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 
 const SolutionsRoute = SolutionsRouteImport.update({
   id: '/solutions',
@@ -82,6 +83,11 @@ const LecturerDashboardRoute = LecturerDashboardRouteImport.update({
   path: '/lecturer/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/admin/dashboard',
+  path: '/admin/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solutions': typeof SolutionsRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/lecturer/dashboard': typeof LecturerDashboardRoute
   '/student/dashboard': typeof StudentDashboardRoute
 }
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solutions': typeof SolutionsRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/lecturer/dashboard': typeof LecturerDashboardRoute
   '/student/dashboard': typeof StudentDashboardRoute
 }
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solutions': typeof SolutionsRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/lecturer/dashboard': typeof LecturerDashboardRoute
   '/student/dashboard': typeof StudentDashboardRoute
 }
@@ -139,6 +148,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/solutions'
+    | '/admin/dashboard'
     | '/lecturer/dashboard'
     | '/student/dashboard'
   fileRoutesByTo: FileRoutesByTo
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/solutions'
+    | '/admin/dashboard'
     | '/lecturer/dashboard'
     | '/student/dashboard'
   id:
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/sitemap.xml'
     | '/solutions'
+    | '/admin/dashboard'
     | '/lecturer/dashboard'
     | '/student/dashboard'
   fileRoutesById: FileRoutesById
@@ -182,6 +194,7 @@ export interface RootRouteChildren {
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SolutionsRoute: typeof SolutionsRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
   LecturerDashboardRoute: typeof LecturerDashboardRoute
   StudentDashboardRoute: typeof StudentDashboardRoute
 }
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LecturerDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/dashboard': {
+      id: '/admin/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -286,6 +306,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SolutionsRoute: SolutionsRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
   LecturerDashboardRoute: LecturerDashboardRoute,
   StudentDashboardRoute: StudentDashboardRoute,
 }
