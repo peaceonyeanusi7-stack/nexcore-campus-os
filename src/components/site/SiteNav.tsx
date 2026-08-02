@@ -37,7 +37,7 @@ export function SiteNav() {
           ))}
         </nav>
         <div className="hidden items-center gap-3 md:flex">
-          <Link to="/contact" className="text-sm text-ink-muted hover:text-ink">
+          <Link to="/login" className="text-sm text-ink-muted hover:text-ink">
             Sign in
           </Link>
           <Link

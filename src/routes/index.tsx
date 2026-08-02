@@ -98,10 +98,10 @@ function Home() {
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
                 </Link>
                 <Link
-                  to="/features"
+                  to="/signup"
                   className="inline-flex h-12 items-center gap-2 rounded-full border border-border bg-surface-elevated px-6 text-sm font-medium text-ink hover:border-brand"
                 >
-                  Explore features
+                  Get started
                 </Link>
               </div>
               <dl className="mt-12 grid max-w-lg grid-cols-3 gap-6">
