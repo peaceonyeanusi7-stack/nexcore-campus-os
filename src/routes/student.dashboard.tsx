@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { requireRole } from "@/lib/guard";
 import { useAuth } from "@/hooks/use-auth";
 import { DashboardShell, type DashboardSection } from "@/components/dashboard/DashboardShell";
-import { ProfilePanel } from "@/components/dashboard/ProfilePanel";
 import { PageTitle, Panel, StatCard, Empty, Rows, Row, Pill, Field, inputClass, btnPrimary, btnGhost } from "@/components/dashboard/kit";
 import { StudentProfilePanel } from "@/components/students/StudentProfilePanel";
 import { StudentAvatar } from "@/components/students/StudentAvatar";
