@@ -10,6 +10,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { DashboardShell, type DashboardSection } from "@/components/dashboard/DashboardShell";
 import { ProfilePanel } from "@/components/dashboard/ProfilePanel";
 import { PageTitle, Panel, StatCard, Empty, Rows, Row, Pill, Field, inputClass, btnPrimary, btnGhost } from "@/components/dashboard/kit";
+import { StudentManager } from "@/components/students/StudentManager";
+import type { Student } from "@/lib/students";
 
 export const Route = createFileRoute("/admin/dashboard")({
   ssr: false,
@@ -47,10 +49,11 @@ function AdminDashboard() {
   const [attendance, setAttendance] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [institutions, setInstitutions] = useState<any[]>([]);
+  const [studentRows, setStudentRows] = useState<Student[]>([]);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
-    const [p, r, c, e, f, a, rs, i] = await Promise.all([
+    const [p, r, c, e, f, a, rs, i, st] = await Promise.all([
       supabase.from("profiles").select("id, full_name, email, institution, created_at").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
       supabase.from("courses").select("id, code, title, units, level, lecturer_id"),
@@ -59,10 +62,12 @@ function AdminDashboard() {
       supabase.from("attendance_records").select("id, status"),
       supabase.from("results").select("id, score"),
       supabase.from("institutions").select("id, name, slug, country, onboarding_status"),
+      supabase.from("students").select("*").order("created_at", { ascending: false }),
     ]);
     setPeople(p.data ?? []); setRoles(r.data ?? []); setCourses(c.data ?? []);
     setEnrollments(e.data ?? []); setFees(f.data ?? []); setAttendance(a.data ?? []);
     setResults(rs.data ?? []); setInstitutions(i.data ?? []);
+    setStudentRows((st.data as Student[]) ?? []);
     setLoading(false);
   }, []);
 
@@ -103,7 +108,7 @@ function AdminDashboard() {
         <>
           <PageTitle title="Institution overview" subtitle="Live snapshot of your campus operations." />
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard icon={GraduationCap} label="Students" value={students.length} />
+            <StatCard icon={GraduationCap} label="Students" value={studentRows.length} hint={`${studentRows.filter((s) => s.status === "active").length} active`} />
             <StatCard icon={Users} label="Lecturers" value={lecturers.length} />
             <StatCard icon={BookOpen} label="Courses" value={courses.length} />
             <StatCard icon={Wallet} label="Fees collected" value={`₦${revenue.toLocaleString()}`} hint={`₦${outstanding.toLocaleString()} outstanding`} />
@@ -136,18 +141,7 @@ function AdminDashboard() {
       {active === "profile" && <ProfilePanel onSaved={refresh} />}
 
       {active === "students" && (
-        <>
-          <PageTitle title="Manage students" subtitle="Everyone registered with the student role." />
-          <Panel title={`${students.length} students`}>
-            {students.length ? (
-              <Rows>
-                {students.map((s) => (
-                  <PersonRow key={s.id} person={s} currentRole="student" onDone={() => flash("Role updated.")} enrolled={enrollments.filter((e) => e.student_id === s.id).length} />
-                ))}
-              </Rows>
-            ) : <Empty message="No students yet. Share the sign-up link with your campus." />}
-          </Panel>
-        </>
+        <StudentManager students={studentRows} loading={loading} onChanged={flash} />
       )}
 
       {active === "lecturers" && (
