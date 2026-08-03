@@ -8,8 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { requireRole } from "@/lib/guard";
 import { useAuth } from "@/hooks/use-auth";
 import { DashboardShell, type DashboardSection } from "@/components/dashboard/DashboardShell";
-import { ProfilePanel } from "@/components/dashboard/ProfilePanel";
 import { PageTitle, Panel, StatCard, Empty, Rows, Row, Pill, Field, inputClass, btnPrimary, btnGhost } from "@/components/dashboard/kit";
+import { StudentProfilePanel } from "@/components/students/StudentProfilePanel";
+import { StudentAvatar } from "@/components/students/StudentAvatar";
+import type { Student } from "@/lib/students";
 
 export const Route = createFileRoute("/student/dashboard")({
   ssr: false,
@@ -53,12 +55,13 @@ function StudentDashboard() {
   const [attendance, setAttendance] = useState<any[]>([]);
   const [timetable, setTimetable] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [student, setStudent] = useState<Student | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
   const loadAll = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
-    const [c, e, a, s, x, at, r, ar, t, n] = await Promise.all([
+    const [c, e, a, s, x, at, r, ar, t, n, me] = await Promise.all([
       supabase.from("courses").select("id, code, title, units, level, semester").order("code"),
       supabase.from("enrollments").select("course_id").eq("student_id", userId),
       supabase.from("assignments").select("id, title, instructions, due_date, max_score, course_id, courses(code, title)").order("due_date"),
@@ -69,6 +72,7 @@ function StudentDashboard() {
       supabase.from("attendance_records").select("id, status, marked_at, attendance_sessions(title, held_on, courses(code))").eq("student_id", userId).order("marked_at", { ascending: false }),
       supabase.from("timetable_entries").select("id, day_of_week, start_time, end_time, venue, courses(code, title)"),
       supabase.from("notifications").select("id, title, body, read, created_at").eq("user_id", userId).order("created_at", { ascending: false }),
+      supabase.from("students").select("*").eq("auth_user_id", userId).maybeSingle(),
     ]);
     setCourses((c.data as Course[]) ?? []);
     setEnrolled((e.data ?? []).map((row: any) => row.course_id));
@@ -80,6 +84,7 @@ function StudentDashboard() {
     setAttendance(ar.data ?? []);
     setTimetable(t.data ?? []);
     setNotifications(n.data ?? []);
+    setStudent((me.data as Student | null) ?? null);
     setLoading(false);
   }, [userId]);
 
@@ -88,6 +93,10 @@ function StudentDashboard() {
   const myCourses = useMemo(() => courses.filter((c) => enrolled.includes(c.id)), [courses, enrolled]);
   const myAssignments = useMemo(() => assignments.filter((a) => enrolled.includes(a.course_id)), [assignments, enrolled]);
   const myExams = useMemo(() => exams.filter((x) => enrolled.includes(x.course_id)), [exams, enrolled]);
+  const attendanceRate = useMemo(() => {
+    if (!attendance.length) return 0;
+    return Math.round((attendance.filter((a) => a.status === "present").length / attendance.length) * 100);
+  }, [attendance]);
   const gpa = useMemo(() => {
     if (!results.length) return "—";
     const pts = results.reduce((sum, r) => sum + Number(r.score ?? 0), 0) / results.length;
@@ -111,7 +120,7 @@ function StudentDashboard() {
   return (
     <DashboardShell
       role="student"
-      name={profile?.full_name ?? ""}
+      name={student?.full_name || profile?.full_name || ""}
       institution={profile?.institution ?? ""}
       sections={sections}
       active={active}
@@ -127,11 +136,30 @@ function StudentDashboard() {
 
       {active === "overview" && (
         <>
-          <PageTitle title={`Welcome, ${profile?.full_name?.split(" ")[0] ?? "student"}`} subtitle="Here's how your semester is going." />
+          <PageTitle
+            title={`Welcome, ${(student?.full_name || profile?.full_name || "student").split(" ")[0]}`}
+            subtitle="Here's how your semester is going."
+          />
+          {student ? (
+            <div className="mb-6 flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-surface-elevated p-5">
+              <StudentAvatar name={student.full_name} photo={student.profile_photo} size="lg" />
+              <div className="min-w-0 flex-1">
+                <p className="font-display text-lg font-semibold">{student.full_name || "Unnamed student"}</p>
+                <p className="text-sm text-ink-muted">
+                  {student.student_id} · {student.programme || "Programme not set"}
+                </p>
+                <p className="mt-1 text-sm text-ink-muted">
+                  {[student.department, student.faculty, student.level ? `${student.level} level` : null]
+                    .filter(Boolean).join(" · ") || "Complete your profile to add department details."}
+                </p>
+              </div>
+              <button type="button" className={btnGhost} onClick={() => setActive("profile")}>View profile</button>
+            </div>
+          ) : null}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard icon={BookOpen} label="Registered courses" value={myCourses.length} />
             <StatCard icon={FileText} label="Assignments due" value={myAssignments.filter((a) => !submissions.some((s) => s.assignment_id === a.id)).length} />
-            <StatCard icon={QrCode} label="Attendance marks" value={attendance.length} />
+            <StatCard icon={QrCode} label="Attendance" value={`${attendanceRate}%`} hint={`${attendance.length} check-ins recorded`} />
             <StatCard icon={Award} label="Estimated GPA" value={gpa} hint="Based on published results" />
           </div>
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -162,7 +190,13 @@ function StudentDashboard() {
         </>
       )}
 
-      {active === "profile" && <ProfilePanel onSaved={refresh} />}
+      {active === "profile" && (
+        <StudentProfilePanel
+          student={student}
+          loading={loading}
+          onSaved={() => { void refresh(); void loadAll(); }}
+        />
+      )}
 
       {active === "courses" && (
         <>

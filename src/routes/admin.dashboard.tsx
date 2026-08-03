@@ -10,6 +10,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { DashboardShell, type DashboardSection } from "@/components/dashboard/DashboardShell";
 import { ProfilePanel } from "@/components/dashboard/ProfilePanel";
 import { PageTitle, Panel, StatCard, Empty, Rows, Row, Pill, Field, inputClass, btnPrimary, btnGhost } from "@/components/dashboard/kit";
+import { StudentManager } from "@/components/students/StudentManager";
+import type { Student } from "@/lib/students";
 
 export const Route = createFileRoute("/admin/dashboard")({
   ssr: false,
@@ -47,22 +49,25 @@ function AdminDashboard() {
   const [attendance, setAttendance] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [institutions, setInstitutions] = useState<any[]>([]);
+  const [studentRows, setStudentRows] = useState<Student[]>([]);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
-    const [p, r, c, e, f, a, rs, i] = await Promise.all([
+    const [p, r, c, e, f, a, rs, i, st] = await Promise.all([
       supabase.from("profiles").select("id, full_name, email, institution, created_at").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
       supabase.from("courses").select("id, code, title, units, level, lecturer_id"),
       supabase.from("enrollments").select("id, course_id, student_id"),
-      supabase.from("fees").select("id, student_id, title, amount, status, due_date").order("due_date", { ascending: true }),
+      supabase.from("fees").select("id, student_id, description, amount_kobo, status, due_date").order("due_date", { ascending: true }),
       supabase.from("attendance_records").select("id, status"),
       supabase.from("results").select("id, score"),
-      supabase.from("institutions").select("id, name, slug, type, state, contact_email"),
+      supabase.from("institutions").select("id, name, slug, country, onboarding_status"),
+      supabase.from("students").select("*").order("created_at", { ascending: false }),
     ]);
     setPeople(p.data ?? []); setRoles(r.data ?? []); setCourses(c.data ?? []);
     setEnrollments(e.data ?? []); setFees(f.data ?? []); setAttendance(a.data ?? []);
     setResults(rs.data ?? []); setInstitutions(i.data ?? []);
+    setStudentRows((st.data as Student[]) ?? []);
     setLoading(false);
   }, []);
 
@@ -73,8 +78,8 @@ function AdminDashboard() {
   const students = people.filter((p) => roleOf(p.id) === "student");
   const lecturers = people.filter((p) => roleOf(p.id) === "lecturer");
   const paid = fees.filter((f) => f.status === "paid");
-  const revenue = paid.reduce((s, f) => s + Number(f.amount ?? 0), 0);
-  const outstanding = fees.filter((f) => f.status !== "paid").reduce((s, f) => s + Number(f.amount ?? 0), 0);
+  const revenue = paid.reduce((s, f) => s + Number(f.amount_kobo ?? 0) / 100, 0);
+  const outstanding = fees.filter((f) => f.status !== "paid").reduce((s, f) => s + Number(f.amount_kobo ?? 0) / 100, 0);
   const presentRate = attendance.length
     ? Math.round((attendance.filter((a) => a.status === "present").length / attendance.length) * 100) : 0;
   const avgScore = results.length
@@ -103,7 +108,7 @@ function AdminDashboard() {
         <>
           <PageTitle title="Institution overview" subtitle="Live snapshot of your campus operations." />
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard icon={GraduationCap} label="Students" value={students.length} />
+            <StatCard icon={GraduationCap} label="Students" value={studentRows.length} hint={`${studentRows.filter((s) => s.status === "active").length} active`} />
             <StatCard icon={Users} label="Lecturers" value={lecturers.length} />
             <StatCard icon={BookOpen} label="Courses" value={courses.length} />
             <StatCard icon={Wallet} label="Fees collected" value={`₦${revenue.toLocaleString()}`} hint={`₦${outstanding.toLocaleString()} outstanding`} />
@@ -136,18 +141,7 @@ function AdminDashboard() {
       {active === "profile" && <ProfilePanel onSaved={refresh} />}
 
       {active === "students" && (
-        <>
-          <PageTitle title="Manage students" subtitle="Everyone registered with the student role." />
-          <Panel title={`${students.length} students`}>
-            {students.length ? (
-              <Rows>
-                {students.map((s) => (
-                  <PersonRow key={s.id} person={s} currentRole="student" onDone={() => flash("Role updated.")} enrolled={enrollments.filter((e) => e.student_id === s.id).length} />
-                ))}
-              </Rows>
-            ) : <Empty message="No students yet. Share the sign-up link with your campus." />}
-          </Panel>
-        </>
+        <StudentManager students={studentRows} loading={loading} onChanged={flash} />
       )}
 
       {active === "lecturers" && (
@@ -205,13 +199,13 @@ function AdminDashboard() {
                 <Rows>
                   {fees.map((f) => (
                     <Row key={f.id}>
-                      <span>{people.find((p) => p.id === f.student_id)?.full_name ?? "Student"} · {f.title}
-                        <span className="block text-xs text-ink-muted">₦{Number(f.amount).toLocaleString()} · due {f.due_date ? new Date(f.due_date).toDateString() : "—"}</span>
+                      <span>{people.find((p) => p.id === f.student_id)?.full_name ?? "Student"} · {f.description}
+                        <span className="block text-xs text-ink-muted">₦{(Number(f.amount_kobo ?? 0) / 100).toLocaleString()} · due {f.due_date ? new Date(f.due_date).toDateString() : "—"}</span>
                       </span>
                       <span className="flex items-center gap-2">
                         <Pill tone={f.status === "paid" ? "good" : "warn"}>{f.status}</Pill>
                         {f.status !== "paid" ? (
-                          <button type="button" className={btnGhost} onClick={async () => { await supabase.from("fees").update({ status: "paid", paid_at: new Date().toISOString() }).eq("id", f.id); flash("Marked as paid."); }}>Mark paid</button>
+                          <button type="button" className={btnGhost} onClick={async () => { await supabase.from("fees").update({ status: "paid" }).eq("id", f.id); flash("Marked as paid."); }}>Mark paid</button>
                         ) : null}
                       </span>
                     </Row>
@@ -268,7 +262,7 @@ function AdminDashboard() {
                   {institutions.map((i) => (
                     <Row key={i.id}>
                       <span className="flex items-center gap-2"><Building2 className="size-4 text-brand" /> {i.name}
-                        <span className="block text-xs text-ink-muted">{i.type} · {i.state ?? "—"}</span>
+                        <span className="block text-xs text-ink-muted">{i.country ?? "—"} · {i.onboarding_status}</span>
                       </span>
                       <Pill>{i.slug}</Pill>
                     </Row>
@@ -357,7 +351,7 @@ function FeeForm({ students, onDone }: any) {
       className="grid gap-4 sm:grid-cols-4"
       onSubmit={async (e) => {
         e.preventDefault();
-        await supabase.from("fees").insert({ student_id: studentId, title, amount: Number(amount), due_date: due || null });
+        await supabase.from("fees").insert({ student_id: studentId, description: title, amount_kobo: Math.round(Number(amount) * 100), due_date: due || null });
         setTitle(""); setAmount("");
         onDone();
       }}
@@ -378,33 +372,23 @@ function FeeForm({ students, onDone }: any) {
 
 function InstitutionForm({ onDone }: { onDone: () => void }) {
   const [name, setName] = useState("");
-  const [type, setType] = useState("university");
-  const [state, setState] = useState("");
-  const [email, setEmail] = useState("");
+  const [country, setCountry] = useState("Nigeria");
   return (
     <form
-      className="grid gap-4 sm:grid-cols-4"
+      className="grid gap-4 sm:grid-cols-3"
       onSubmit={async (e) => {
         e.preventDefault();
         await supabase.from("institutions").insert({
-          name, type, state, contact_email: email,
+          name,
+          country,
           slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
         });
-        setName(""); setState(""); setEmail("");
+        setName("");
         onDone();
       }}
     >
       <Field label="Institution name"><input required className={inputClass} value={name} onChange={(e) => setName(e.target.value)} /></Field>
-      <Field label="Type">
-        <select className={inputClass} value={type} onChange={(e) => setType(e.target.value)}>
-          <option value="university">University</option>
-          <option value="polytechnic">Polytechnic</option>
-          <option value="college">College of Education</option>
-          <option value="secondary">Secondary school</option>
-        </select>
-      </Field>
-      <Field label="State"><input className={inputClass} value={state} onChange={(e) => setState(e.target.value)} placeholder="Lagos" /></Field>
-      <Field label="Contact email"><input type="email" className={inputClass} value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
+      <Field label="Country"><input className={inputClass} value={country} onChange={(e) => setCountry(e.target.value)} placeholder="Nigeria" /></Field>
       <button type="submit" className={btnPrimary}>Save institution</button>
     </form>
   );
