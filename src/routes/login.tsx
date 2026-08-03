@@ -32,7 +32,8 @@ const portals: { role: AppRole; icon: typeof GraduationCap }[] = [
 function LoginPage() {
   const navigate = useNavigate();
   const search = useSearch({ from: "/login" });
-  const hint = isAppRole(search.role) ? search.role : null;
+  const rawRole: unknown = search.role;
+  const hint: AppRole | null = isAppRole(rawRole) ? rawRole : null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
