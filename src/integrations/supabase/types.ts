@@ -505,6 +505,57 @@ export type Database = {
           },
         ]
       }
+      students: {
+        Row: {
+          auth_user_id: string | null
+          created_at: string
+          department: string | null
+          email: string
+          faculty: string | null
+          full_name: string
+          id: string
+          level: string | null
+          phone: string | null
+          profile_photo: string | null
+          programme: string | null
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          auth_user_id?: string | null
+          created_at?: string
+          department?: string | null
+          email: string
+          faculty?: string | null
+          full_name?: string
+          id?: string
+          level?: string | null
+          phone?: string | null
+          profile_photo?: string | null
+          programme?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          auth_user_id?: string | null
+          created_at?: string
+          department?: string | null
+          email?: string
+          faculty?: string | null
+          full_name?: string
+          id?: string
+          level?: string | null
+          phone?: string | null
+          profile_photo?: string | null
+          programme?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       submissions: {
         Row: {
           assignment_id: string
