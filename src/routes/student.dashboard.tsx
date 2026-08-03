@@ -191,7 +191,13 @@ function StudentDashboard() {
         </>
       )}
 
-      {active === "profile" && <ProfilePanel onSaved={refresh} />}
+      {active === "profile" && (
+        <StudentProfilePanel
+          student={student}
+          loading={loading}
+          onSaved={() => { void refresh(); void loadAll(); }}
+        />
+      )}
 
       {active === "courses" && (
         <>
