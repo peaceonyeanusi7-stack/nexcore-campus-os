@@ -128,42 +128,95 @@ export type Database = {
           },
         ]
       }
+      course_registrations: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          registration_date: string
+          semester: string
+          session: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          registration_date?: string
+          semester?: string
+          session?: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          registration_date?: string
+          semester?: string
+          session?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_registrations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           code: string
           created_at: string
+          department: string | null
           description: string | null
           id: string
           institution_id: string | null
           lecturer_id: string | null
           level: string | null
           semester: string | null
+          status: string
           title: string
           units: number
+          updated_at: string
         }
         Insert: {
           code: string
           created_at?: string
+          department?: string | null
           description?: string | null
           id?: string
           institution_id?: string | null
           lecturer_id?: string | null
           level?: string | null
           semester?: string | null
+          status?: string
           title: string
           units?: number
+          updated_at?: string
         }
         Update: {
           code?: string
           created_at?: string
+          department?: string | null
           description?: string | null
           id?: string
           institution_id?: string | null
           lecturer_id?: string | null
           level?: string | null
           semester?: string | null
+          status?: string
           title?: string
           units?: number
+          updated_at?: string
         }
         Relationships: [
           {
@@ -460,6 +513,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      registration_periods: {
+        Row: {
+          closes_at: string
+          created_at: string
+          id: string
+          is_active: boolean
+          opens_at: string
+          semester: string
+          session: string
+          updated_at: string
+        }
+        Insert: {
+          closes_at: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          opens_at?: string
+          semester: string
+          session: string
+          updated_at?: string
+        }
+        Update: {
+          closes_at?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          opens_at?: string
+          semester?: string
+          session?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       results: {
         Row: {

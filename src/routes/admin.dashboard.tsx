@@ -11,6 +11,7 @@ import { DashboardShell, type DashboardSection } from "@/components/dashboard/Da
 import { ProfilePanel } from "@/components/dashboard/ProfilePanel";
 import { PageTitle, Panel, StatCard, Empty, Rows, Row, Pill, Field, inputClass, btnPrimary, btnGhost } from "@/components/dashboard/kit";
 import { StudentManager } from "@/components/students/StudentManager";
+import { useAdminCourses, AdminCoursesPanel } from "@/components/courses/AdminCourses";
 import type { Student } from "@/lib/students";
 
 export const Route = createFileRoute("/admin/dashboard")({
@@ -50,6 +51,7 @@ function AdminDashboard() {
   const [results, setResults] = useState<any[]>([]);
   const [institutions, setInstitutions] = useState<any[]>([]);
   const [studentRows, setStudentRows] = useState<Student[]>([]);
+  const courseState = useAdminCourses();
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -110,7 +112,7 @@ function AdminDashboard() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard icon={GraduationCap} label="Students" value={studentRows.length} hint={`${studentRows.filter((s) => s.status === "active").length} active`} />
             <StatCard icon={Users} label="Lecturers" value={lecturers.length} />
-            <StatCard icon={BookOpen} label="Courses" value={courses.length} />
+            <StatCard icon={BookOpen} label="Courses" value={courseState.courses.length} hint={`${courseState.registrations.length} registrations`} />
             <StatCard icon={Wallet} label="Fees collected" value={`₦${revenue.toLocaleString()}`} hint={`₦${outstanding.toLocaleString()} outstanding`} />
           </div>
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
@@ -130,7 +132,13 @@ function AdminDashboard() {
               <Rows>
                 <Row><span>Attendance rate</span><Pill tone="good">{presentRate}%</Pill></Row>
                 <Row><span>Average score</span><Pill tone="good">{avgScore}</Pill></Row>
-                <Row><span>Course registrations</span><Pill>{enrollments.length}</Pill></Row>
+                <Row><span>Course registrations</span><Pill>{courseState.registrations.length}</Pill></Row>
+                <Row>
+                  <span>Registration period</span>
+                  <Pill tone={courseState.activePeriod ? "good" : "warn"}>
+                    {courseState.activePeriod ? `${courseState.activePeriod.session} · ${courseState.activePeriod.semester}` : "Not set"}
+                  </Pill>
+                </Row>
                 <Row><span>Institutions onboarded</span><Pill>{institutions.length}</Pill></Row>
               </Rows>
             </Panel>
@@ -160,31 +168,7 @@ function AdminDashboard() {
       )}
 
       {active === "courses" && (
-        <>
-          <PageTitle title="Manage courses" subtitle="All courses across the institution." />
-          <Panel title="Create course">
-            <AdminCourseForm lecturers={lecturers} onDone={() => flash("Course created.")} />
-          </Panel>
-          <div className="mt-6">
-            <Panel title={`${courses.length} courses`}>
-              {courses.length ? (
-                <Rows>
-                  {courses.map((c) => (
-                    <Row key={c.id}>
-                      <span><span className="font-medium">{c.code}</span> — {c.title}
-                        <span className="block text-xs text-ink-muted">{people.find((p) => p.id === c.lecturer_id)?.full_name ?? "Unassigned"}</span>
-                      </span>
-                      <span className="flex items-center gap-2">
-                        <Pill>{enrollments.filter((e) => e.course_id === c.id).length} enrolled</Pill>
-                        <button type="button" className={btnGhost} onClick={async () => { await supabase.from("courses").delete().eq("id", c.id); flash("Course removed."); }}>Delete</button>
-                      </span>
-                    </Row>
-                  ))}
-                </Rows>
-              ) : <Empty message="No courses yet." />}
-            </Panel>
-          </div>
-        </>
+        <AdminCoursesPanel state={courseState} lecturers={lecturers} />
       )}
 
       {active === "fees" && (

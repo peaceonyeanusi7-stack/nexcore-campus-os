@@ -11,6 +11,7 @@ import { DashboardShell, type DashboardSection } from "@/components/dashboard/Da
 import { PageTitle, Panel, StatCard, Empty, Rows, Row, Pill, Field, inputClass, btnPrimary, btnGhost } from "@/components/dashboard/kit";
 import { StudentProfilePanel } from "@/components/students/StudentProfilePanel";
 import { StudentAvatar } from "@/components/students/StudentAvatar";
+import { useCourseRegistration, CourseRegistrationPanel } from "@/components/courses/CourseRegistration";
 import type { Student } from "@/lib/students";
 
 export const Route = createFileRoute("/student/dashboard")({
@@ -57,6 +58,7 @@ function StudentDashboard() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [student, setStudent] = useState<Student | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const reg = useCourseRegistration(userId ?? null, student);
 
   const loadAll = useCallback(async () => {
     if (!userId) return;
@@ -90,7 +92,6 @@ function StudentDashboard() {
 
   useEffect(() => { void loadAll(); }, [loadAll]);
 
-  const myCourses = useMemo(() => courses.filter((c) => enrolled.includes(c.id)), [courses, enrolled]);
   const myAssignments = useMemo(() => assignments.filter((a) => enrolled.includes(a.course_id)), [assignments, enrolled]);
   const myExams = useMemo(() => exams.filter((x) => enrolled.includes(x.course_id)), [exams, enrolled]);
   const attendanceRate = useMemo(() => {
@@ -102,18 +103,6 @@ function StudentDashboard() {
     const pts = results.reduce((sum, r) => sum + Number(r.score ?? 0), 0) / results.length;
     return (Math.round((pts / 20) * 100) / 100).toFixed(2);
   }, [results]);
-
-  async function toggleEnrollment(courseId: string) {
-    if (!userId) return;
-    if (enrolled.includes(courseId)) {
-      await supabase.from("enrollments").delete().eq("course_id", courseId).eq("student_id", userId);
-      setMsg("Course dropped.");
-    } else {
-      await supabase.from("enrollments").insert({ course_id: courseId, student_id: userId });
-      setMsg("Course registered.");
-    }
-    await loadAll();
-  }
 
   if (!role) return <FullLoader />;
 
@@ -157,8 +146,18 @@ function StudentDashboard() {
             </div>
           ) : null}
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard icon={BookOpen} label="Registered courses" value={myCourses.length} />
-            <StatCard icon={FileText} label="Assignments due" value={myAssignments.filter((a) => !submissions.some((s) => s.assignment_id === a.id)).length} />
+            <StatCard
+              icon={BookOpen}
+              label="Registered courses"
+              value={reg.myCourses.length}
+              hint={`${reg.totalUnits} credit units`}
+            />
+            <StatCard
+              icon={CalendarDays}
+              label="Registration"
+              value={reg.periodInfo.open ? "Open" : "Closed"}
+              hint={reg.periodInfo.label}
+            />
             <StatCard icon={QrCode} label="Attendance" value={`${attendanceRate}%`} hint={`${attendance.length} check-ins recorded`} />
             <StatCard icon={Award} label="Estimated GPA" value={gpa} hint="Based on published results" />
           </div>
@@ -199,26 +198,7 @@ function StudentDashboard() {
       )}
 
       {active === "courses" && (
-        <>
-          <PageTitle title="Course registration" subtitle="Register or drop courses for the current semester." />
-          <Panel>
-            {courses.length ? (
-              <Rows>
-                {courses.map((c) => (
-                  <Row key={c.id}>
-                    <span>
-                      <span className="font-medium">{c.code}</span> — {c.title}
-                      <span className="ml-2 text-xs text-ink-muted">{c.units} units{c.level ? ` · ${c.level}` : ""}</span>
-                    </span>
-                    <button type="button" className={btnGhost} onClick={() => void toggleEnrollment(c.id)}>
-                      {enrolled.includes(c.id) ? "Drop" : "Register"}
-                    </button>
-                  </Row>
-                ))}
-              </Rows>
-            ) : <Empty message="No courses have been published by your institution yet." />}
-          </Panel>
-        </>
+        <CourseRegistrationPanel reg={reg} />
       )}
 
       {active === "assignments" && (
