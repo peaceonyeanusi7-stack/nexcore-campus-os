@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { DashboardShell, type DashboardSection } from "@/components/dashboard/DashboardShell";
 import { ProfilePanel } from "@/components/dashboard/ProfilePanel";
 import { PageTitle, Panel, StatCard, Empty, Rows, Row, Pill, Field, inputClass, btnPrimary, btnGhost } from "@/components/dashboard/kit";
+import { useLecturerCourses, LecturerCoursesPanel } from "@/components/courses/LecturerCourses";
 
 export const Route = createFileRoute("/lecturer/dashboard")({
   ssr: false,
@@ -27,6 +28,7 @@ const sections: DashboardSection[] = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
   { key: "profile", label: "Profile", icon: User },
   { key: "courses", label: "Manage courses", icon: BookOpen },
+  { key: "classlists", label: "Class lists", icon: Users },
   { key: "assignments", label: "Assignments", icon: FileText },
   { key: "exams", label: "CBT exams", icon: MonitorCheck },
   { key: "attendance", label: "Attendance", icon: QrCode },
@@ -50,6 +52,7 @@ function LecturerDashboard() {
   const [attRecords, setAttRecords] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [timetable, setTimetable] = useState<any[]>([]);
+  const reg = useLecturerCourses(userId ?? null);
 
   const loadAll = useCallback(async () => {
     if (!userId) return;
@@ -109,8 +112,8 @@ function LecturerDashboard() {
         <>
           <PageTitle title={`Good day, ${profile?.full_name?.split(" ")[0] ?? "lecturer"}`} subtitle="Your teaching load at a glance." />
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard icon={BookOpen} label="Courses" value={courses.length} />
-            <StatCard icon={Users} label="Enrolled students" value={enrollments.length} />
+            <StatCard icon={BookOpen} label="Assigned courses" value={reg.courses.length} />
+            <StatCard icon={Users} label="Enrolled students" value={new Set(reg.rows.map((r) => r.student_id)).size} hint={`${reg.rows.length} course registrations`} />
             <StatCard icon={FileText} label="Submissions to grade" value={submissions.filter((s) => s.score == null).length} />
             <StatCard icon={QrCode} label="Attendance sessions" value={attSessions.length} />
           </div>
@@ -132,6 +135,8 @@ function LecturerDashboard() {
       )}
 
       {active === "profile" && <ProfilePanel onSaved={refresh} />}
+
+      {active === "classlists" && <LecturerCoursesPanel state={reg} />}
 
       {active === "courses" && (
         <>
