@@ -92,7 +92,6 @@ function StudentDashboard() {
 
   useEffect(() => { void loadAll(); }, [loadAll]);
 
-  const myCourses = useMemo(() => courses.filter((c) => enrolled.includes(c.id)), [courses, enrolled]);
   const myAssignments = useMemo(() => assignments.filter((a) => enrolled.includes(a.course_id)), [assignments, enrolled]);
   const myExams = useMemo(() => exams.filter((x) => enrolled.includes(x.course_id)), [exams, enrolled]);
   const attendanceRate = useMemo(() => {
@@ -104,18 +103,6 @@ function StudentDashboard() {
     const pts = results.reduce((sum, r) => sum + Number(r.score ?? 0), 0) / results.length;
     return (Math.round((pts / 20) * 100) / 100).toFixed(2);
   }, [results]);
-
-  async function toggleEnrollment(courseId: string) {
-    if (!userId) return;
-    if (enrolled.includes(courseId)) {
-      await supabase.from("enrollments").delete().eq("course_id", courseId).eq("student_id", userId);
-      setMsg("Course dropped.");
-    } else {
-      await supabase.from("enrollments").insert({ course_id: courseId, student_id: userId });
-      setMsg("Course registered.");
-    }
-    await loadAll();
-  }
 
   if (!role) return <FullLoader />;
 
