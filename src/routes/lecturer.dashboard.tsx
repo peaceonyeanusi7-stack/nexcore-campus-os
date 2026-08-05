@@ -11,6 +11,7 @@ import { DashboardShell, type DashboardSection } from "@/components/dashboard/Da
 import { ProfilePanel } from "@/components/dashboard/ProfilePanel";
 import { PageTitle, Panel, StatCard, Empty, Rows, Row, Pill, Field, inputClass, btnPrimary, btnGhost } from "@/components/dashboard/kit";
 import { useLecturerCourses, LecturerCoursesPanel } from "@/components/courses/LecturerCourses";
+import { useLecturerAttendance, LecturerAttendancePanel } from "@/components/attendance/LecturerAttendance";
 
 export const Route = createFileRoute("/lecturer/dashboard")({
   ssr: false,
@@ -48,11 +49,10 @@ function LecturerDashboard() {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [exams, setExams] = useState<any[]>([]);
-  const [attSessions, setAttSessions] = useState<any[]>([]);
-  const [attRecords, setAttRecords] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [timetable, setTimetable] = useState<any[]>([]);
   const reg = useLecturerCourses(userId ?? null);
+  const att = useLecturerAttendance(userId ?? null);
 
   const loadAll = useCallback(async () => {
     if (!userId) return;
@@ -60,28 +60,24 @@ function LecturerDashboard() {
     const { data: myCourses } = await supabase
       .from("courses").select("id, code, title, units, level, semester").eq("lecturer_id", userId).order("code");
     const ids = (myCourses ?? []).map((c: any) => c.id);
-    const [en, asg, ex, ses, res, tt] = await Promise.all([
+    const [en, asg, ex, res, tt] = await Promise.all([
       ids.length ? supabase.from("enrollments").select("id, course_id, student_id, profiles:student_id(full_name, email)").in("course_id", ids) : { data: [] },
       ids.length ? supabase.from("assignments").select("id, title, due_date, max_score, course_id, courses(code)").in("course_id", ids) : { data: [] },
       ids.length ? supabase.from("exams").select("id, title, duration_minutes, is_published, course_id, courses(code)").in("course_id", ids) : { data: [] },
-      ids.length ? supabase.from("attendance_sessions").select("id, title, session_code, held_on, course_id, courses(code)").in("course_id", ids).order("held_on", { ascending: false }) : { data: [] },
       ids.length ? supabase.from("results").select("id, score, grade, session, semester, student_id, course_id, courses(code)").in("course_id", ids) : { data: [] },
       ids.length ? supabase.from("timetable_entries").select("id, day_of_week, start_time, end_time, venue, course_id, courses(code)").in("course_id", ids) : { data: [] },
     ]);
     const asgIds = (asg.data ?? []).map((a: any) => a.id);
-    const [subs, recs] = await Promise.all([
-      asgIds.length ? supabase.from("submissions").select("id, assignment_id, student_id, content, score, feedback, profiles:student_id(full_name)").in("assignment_id", asgIds) : { data: [] },
-      (ses.data ?? []).length ? supabase.from("attendance_records").select("id, session_id, status, student_id, profiles:student_id(full_name)").in("session_id", (ses.data ?? []).map((s: any) => s.id)) : { data: [] },
-    ]);
+    const subs = asgIds.length
+      ? await supabase.from("submissions").select("id, assignment_id, student_id, content, score, feedback, profiles:student_id(full_name)").in("assignment_id", asgIds)
+      : { data: [] as any[] };
     setCourses(myCourses ?? []);
     setEnrollments(en.data ?? []);
     setAssignments(asg.data ?? []);
     setExams(ex.data ?? []);
-    setAttSessions(ses.data ?? []);
     setResults(res.data ?? []);
     setTimetable(tt.data ?? []);
     setSubmissions(subs.data ?? []);
-    setAttRecords(recs.data ?? []);
     setLoading(false);
   }, [userId]);
 
@@ -115,7 +111,7 @@ function LecturerDashboard() {
             <StatCard icon={BookOpen} label="Assigned courses" value={reg.courses.length} />
             <StatCard icon={Users} label="Enrolled students" value={new Set(reg.rows.map((r) => r.student_id)).size} hint={`${reg.rows.length} course registrations`} />
             <StatCard icon={FileText} label="Submissions to grade" value={submissions.filter((s) => s.score == null).length} />
-            <StatCard icon={QrCode} label="Attendance sessions" value={attSessions.length} />
+            <StatCard icon={QrCode} label="Active sessions" value={att.activeSessions.length} hint={`${att.presentToday} present today · ${att.rate}% rate`} />
           </div>
           <div className="mt-6">
             <Panel title="Your courses">
@@ -200,28 +196,9 @@ function LecturerDashboard() {
         </>
       )}
 
-      {active === "attendance" && (
-        <>
-          <PageTitle title="Attendance" subtitle="Open a session and share the code or QR with your class." />
-          <Panel title="Start a session">
-            <SessionForm courses={courses} lecturerId={userId!} onDone={() => flash("Attendance session opened.")} />
-          </Panel>
-          <div className="mt-6 space-y-4">
-            {attSessions.length ? attSessions.map((s) => (
-              <Panel key={s.id} title={`${s.courses?.code} · ${s.title ?? "Class session"}`} action={<Pill tone="good">Code {s.session_code}</Pill>}>
-                <p className="mb-3 text-xs text-ink-muted">{new Date(s.held_on).toDateString()}</p>
-                {attRecords.filter((r) => r.session_id === s.id).length ? (
-                  <Rows>
-                    {attRecords.filter((r) => r.session_id === s.id).map((r) => (
-                      <Row key={r.id}><span>{r.profiles?.full_name ?? "Student"}</span><Pill tone="good">{r.status}</Pill></Row>
-                    ))}
-                  </Rows>
-                ) : <Empty message="No check-ins yet." />}
-              </Panel>
-            )) : <Empty message="No sessions yet." />}
-          </div>
-        </>
-      )}
+      {active === "attendance" && userId ? (
+        <LecturerAttendancePanel state={att} lecturerId={userId} />
+      ) : null}
 
       {active === "results" && (
         <>
@@ -436,31 +413,6 @@ function ExamEditor({ exam, onDone }: any) {
         <div className="flex items-end"><button type="submit" className={btnPrimary}>Add question</button></div>
       </form>
     </Panel>
-  );
-}
-
-function SessionForm({ courses, lecturerId, onDone }: any) {
-  const [courseId, setCourseId] = useState("");
-  const [title, setTitle] = useState("");
-  return (
-    <form
-      className="grid gap-4 sm:grid-cols-3"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        await supabase.from("attendance_sessions").insert({ course_id: courseId, lecturer_id: lecturerId, title });
-        setTitle("");
-        onDone();
-      }}
-    >
-      <Field label="Course">
-        <select required className={inputClass} value={courseId} onChange={(e) => setCourseId(e.target.value)}>
-          <option value="">Select course</option>
-          {courses.map((c: any) => <option key={c.id} value={c.id}>{c.code}</option>)}
-        </select>
-      </Field>
-      <Field label="Session title"><input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Week 5 lecture" /></Field>
-      <div className="flex items-end"><button type="submit" className={btnPrimary}>Open session</button></div>
-    </form>
   );
 }
 
