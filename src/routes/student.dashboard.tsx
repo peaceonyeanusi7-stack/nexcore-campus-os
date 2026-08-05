@@ -12,6 +12,7 @@ import { PageTitle, Panel, StatCard, Empty, Rows, Row, Pill, Field, inputClass, 
 import { StudentProfilePanel } from "@/components/students/StudentProfilePanel";
 import { StudentAvatar } from "@/components/students/StudentAvatar";
 import { useCourseRegistration, CourseRegistrationPanel } from "@/components/courses/CourseRegistration";
+import { useStudentAttendance, StudentAttendancePanel } from "@/components/attendance/StudentAttendance";
 import type { Student } from "@/lib/students";
 
 export const Route = createFileRoute("/student/dashboard")({
@@ -53,17 +54,17 @@ function StudentDashboard() {
   const [exams, setExams] = useState<any[]>([]);
   const [attempts, setAttempts] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
-  const [attendance, setAttendance] = useState<any[]>([]);
   const [timetable, setTimetable] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [student, setStudent] = useState<Student | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const reg = useCourseRegistration(userId ?? null, student);
+  const att = useStudentAttendance(userId ?? null);
 
   const loadAll = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
-    const [c, e, a, s, x, at, r, ar, t, n, me] = await Promise.all([
+    const [c, e, a, s, x, at, r, t, n, me] = await Promise.all([
       supabase.from("courses").select("id, code, title, units, level, semester").order("code"),
       supabase.from("enrollments").select("course_id").eq("student_id", userId),
       supabase.from("assignments").select("id, title, instructions, due_date, max_score, course_id, courses(code, title)").order("due_date"),
@@ -71,7 +72,6 @@ function StudentDashboard() {
       supabase.from("exams").select("id, title, duration_minutes, starts_at, is_published, course_id, courses(code)").eq("is_published", true),
       supabase.from("exam_attempts").select("id, exam_id, score, submitted_at").eq("student_id", userId),
       supabase.from("results").select("id, score, grade, session, semester, courses(code, title, units)").eq("student_id", userId),
-      supabase.from("attendance_records").select("id, status, marked_at, attendance_sessions(title, held_on, courses(code))").eq("student_id", userId).order("marked_at", { ascending: false }),
       supabase.from("timetable_entries").select("id, day_of_week, start_time, end_time, venue, courses(code, title)"),
       supabase.from("notifications").select("id, title, body, read, created_at").eq("user_id", userId).order("created_at", { ascending: false }),
       supabase.from("students").select("*").eq("auth_user_id", userId).maybeSingle(),
@@ -83,7 +83,6 @@ function StudentDashboard() {
     setExams(x.data ?? []);
     setAttempts(at.data ?? []);
     setResults(r.data ?? []);
-    setAttendance(ar.data ?? []);
     setTimetable(t.data ?? []);
     setNotifications(n.data ?? []);
     setStudent((me.data as Student | null) ?? null);
@@ -94,10 +93,6 @@ function StudentDashboard() {
 
   const myAssignments = useMemo(() => assignments.filter((a) => enrolled.includes(a.course_id)), [assignments, enrolled]);
   const myExams = useMemo(() => exams.filter((x) => enrolled.includes(x.course_id)), [exams, enrolled]);
-  const attendanceRate = useMemo(() => {
-    if (!attendance.length) return 0;
-    return Math.round((attendance.filter((a) => a.status === "present").length / attendance.length) * 100);
-  }, [attendance]);
   const gpa = useMemo(() => {
     if (!results.length) return "—";
     const pts = results.reduce((sum, r) => sum + Number(r.score ?? 0), 0) / results.length;
