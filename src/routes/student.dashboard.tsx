@@ -153,7 +153,7 @@ function StudentDashboard() {
               value={reg.periodInfo.open ? "Open" : "Closed"}
               hint={reg.periodInfo.label}
             />
-            <StatCard icon={QrCode} label="Attendance" value={`${attendanceRate}%`} hint={`${attendance.length} check-ins recorded`} />
+            <StatCard icon={QrCode} label="Attendance" value={`${att.rate}%`} hint={`${att.records.length} check-ins recorded`} />
             <StatCard icon={Award} label="Estimated GPA" value={gpa} hint="Based on published results" />
           </div>
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
@@ -239,9 +239,9 @@ function StudentDashboard() {
         </>
       )}
 
-      {active === "attendance" && (
-        <AttendancePanel records={attendance} studentId={userId!} onDone={loadAll} setMsg={setMsg} />
-      )}
+      {active === "attendance" && userId ? (
+        <StudentAttendancePanel state={att} studentId={userId} />
+      ) : null}
 
       {active === "timetable" && (
         <>
