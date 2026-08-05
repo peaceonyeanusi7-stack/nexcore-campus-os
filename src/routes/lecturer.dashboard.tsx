@@ -11,6 +11,7 @@ import { DashboardShell, type DashboardSection } from "@/components/dashboard/Da
 import { ProfilePanel } from "@/components/dashboard/ProfilePanel";
 import { PageTitle, Panel, StatCard, Empty, Rows, Row, Pill, Field, inputClass, btnPrimary, btnGhost } from "@/components/dashboard/kit";
 import { useLecturerCourses, LecturerCoursesPanel } from "@/components/courses/LecturerCourses";
+import { useLecturerAttendance, LecturerAttendancePanel } from "@/components/attendance/LecturerAttendance";
 
 export const Route = createFileRoute("/lecturer/dashboard")({
   ssr: false,
@@ -53,6 +54,7 @@ function LecturerDashboard() {
   const [results, setResults] = useState<any[]>([]);
   const [timetable, setTimetable] = useState<any[]>([]);
   const reg = useLecturerCourses(userId ?? null);
+  const att = useLecturerAttendance(userId ?? null);
 
   const loadAll = useCallback(async () => {
     if (!userId) return;
@@ -115,7 +117,7 @@ function LecturerDashboard() {
             <StatCard icon={BookOpen} label="Assigned courses" value={reg.courses.length} />
             <StatCard icon={Users} label="Enrolled students" value={new Set(reg.rows.map((r) => r.student_id)).size} hint={`${reg.rows.length} course registrations`} />
             <StatCard icon={FileText} label="Submissions to grade" value={submissions.filter((s) => s.score == null).length} />
-            <StatCard icon={QrCode} label="Attendance sessions" value={attSessions.length} />
+            <StatCard icon={QrCode} label="Active sessions" value={att.activeSessions.length} hint={`${att.presentToday} present today · ${att.rate}% rate`} />
           </div>
           <div className="mt-6">
             <Panel title="Your courses">
@@ -200,28 +202,9 @@ function LecturerDashboard() {
         </>
       )}
 
-      {active === "attendance" && (
-        <>
-          <PageTitle title="Attendance" subtitle="Open a session and share the code or QR with your class." />
-          <Panel title="Start a session">
-            <SessionForm courses={courses} lecturerId={userId!} onDone={() => flash("Attendance session opened.")} />
-          </Panel>
-          <div className="mt-6 space-y-4">
-            {attSessions.length ? attSessions.map((s) => (
-              <Panel key={s.id} title={`${s.courses?.code} · ${s.title ?? "Class session"}`} action={<Pill tone="good">Code {s.session_code}</Pill>}>
-                <p className="mb-3 text-xs text-ink-muted">{new Date(s.held_on).toDateString()}</p>
-                {attRecords.filter((r) => r.session_id === s.id).length ? (
-                  <Rows>
-                    {attRecords.filter((r) => r.session_id === s.id).map((r) => (
-                      <Row key={r.id}><span>{r.profiles?.full_name ?? "Student"}</span><Pill tone="good">{r.status}</Pill></Row>
-                    ))}
-                  </Rows>
-                ) : <Empty message="No check-ins yet." />}
-              </Panel>
-            )) : <Empty message="No sessions yet." />}
-          </div>
-        </>
-      )}
+      {active === "attendance" && userId ? (
+        <LecturerAttendancePanel state={att} lecturerId={userId} />
+      ) : null}
 
       {active === "results" && (
         <>
