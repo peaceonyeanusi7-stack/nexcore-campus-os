@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  LayoutDashboard, User, GraduationCap, Users, BookOpen, Wallet,
+  LayoutDashboard, User, GraduationCap, Users, BookOpen, Wallet, QrCode,
   BarChart3, Settings, Loader2, CheckCircle2, Building2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import { ProfilePanel } from "@/components/dashboard/ProfilePanel";
 import { PageTitle, Panel, StatCard, Empty, Rows, Row, Pill, Field, inputClass, btnPrimary, btnGhost } from "@/components/dashboard/kit";
 import { StudentManager } from "@/components/students/StudentManager";
 import { useAdminCourses, AdminCoursesPanel } from "@/components/courses/AdminCourses";
+import { useAdminAttendance, AdminAttendancePanel } from "@/components/attendance/AdminAttendance";
 import type { Student } from "@/lib/students";
 
 export const Route = createFileRoute("/admin/dashboard")({
@@ -32,6 +33,7 @@ const sections: DashboardSection[] = [
   { key: "students", label: "Students", icon: GraduationCap },
   { key: "lecturers", label: "Lecturers", icon: Users },
   { key: "courses", label: "Courses", icon: BookOpen },
+  { key: "attendance", label: "Attendance", icon: QrCode },
   { key: "fees", label: "Fees", icon: Wallet },
   { key: "analytics", label: "Analytics", icon: BarChart3 },
   { key: "settings", label: "School settings", icon: Settings },
@@ -52,6 +54,7 @@ function AdminDashboard() {
   const [institutions, setInstitutions] = useState<any[]>([]);
   const [studentRows, setStudentRows] = useState<Student[]>([]);
   const courseState = useAdminCourses();
+  const attState = useAdminAttendance();
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -170,6 +173,8 @@ function AdminDashboard() {
       {active === "courses" && (
         <AdminCoursesPanel state={courseState} lecturers={lecturers} />
       )}
+
+      {active === "attendance" && <AdminAttendancePanel state={attState} />}
 
       {active === "fees" && (
         <>
