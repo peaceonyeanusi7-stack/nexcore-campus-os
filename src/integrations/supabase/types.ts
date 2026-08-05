@@ -57,25 +57,34 @@ export type Database = {
       }
       attendance_records: {
         Row: {
+          check_in_time: string
+          created_at: string
           id: string
           marked_at: string
           session_id: string
           status: string
           student_id: string
+          verification_method: string
         }
         Insert: {
+          check_in_time?: string
+          created_at?: string
           id?: string
           marked_at?: string
           session_id: string
           status?: string
           student_id: string
+          verification_method?: string
         }
         Update: {
+          check_in_time?: string
+          created_at?: string
           id?: string
           marked_at?: string
           session_id?: string
           status?: string
           student_id?: string
+          verification_method?: string
         }
         Relationships: [
           {
@@ -91,31 +100,43 @@ export type Database = {
         Row: {
           course_id: string
           created_at: string
+          end_time: string | null
           expires_at: string | null
           held_on: string
           id: string
           lecturer_id: string | null
+          method: string
           session_code: string
+          start_time: string | null
+          status: string
           title: string | null
         }
         Insert: {
           course_id: string
           created_at?: string
+          end_time?: string | null
           expires_at?: string | null
           held_on?: string
           id?: string
           lecturer_id?: string | null
+          method?: string
           session_code?: string
+          start_time?: string | null
+          status?: string
           title?: string | null
         }
         Update: {
           course_id?: string
           created_at?: string
+          end_time?: string | null
           expires_at?: string | null
           held_on?: string
           id?: string
           lecturer_id?: string | null
+          method?: string
           session_code?: string
+          start_time?: string | null
+          status?: string
           title?: string | null
         }
         Relationships: [
