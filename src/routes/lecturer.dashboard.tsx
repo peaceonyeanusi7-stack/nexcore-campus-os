@@ -49,8 +49,6 @@ function LecturerDashboard() {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [exams, setExams] = useState<any[]>([]);
-  const [attSessions, setAttSessions] = useState<any[]>([]);
-  const [attRecords, setAttRecords] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [timetable, setTimetable] = useState<any[]>([]);
   const reg = useLecturerCourses(userId ?? null);
@@ -419,31 +417,6 @@ function ExamEditor({ exam, onDone }: any) {
         <div className="flex items-end"><button type="submit" className={btnPrimary}>Add question</button></div>
       </form>
     </Panel>
-  );
-}
-
-function SessionForm({ courses, lecturerId, onDone }: any) {
-  const [courseId, setCourseId] = useState("");
-  const [title, setTitle] = useState("");
-  return (
-    <form
-      className="grid gap-4 sm:grid-cols-3"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        await supabase.from("attendance_sessions").insert({ course_id: courseId, lecturer_id: lecturerId, title });
-        setTitle("");
-        onDone();
-      }}
-    >
-      <Field label="Course">
-        <select required className={inputClass} value={courseId} onChange={(e) => setCourseId(e.target.value)}>
-          <option value="">Select course</option>
-          {courses.map((c: any) => <option key={c.id} value={c.id}>{c.code}</option>)}
-        </select>
-      </Field>
-      <Field label="Session title"><input className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Week 5 lecture" /></Field>
-      <div className="flex items-end"><button type="submit" className={btnPrimary}>Open session</button></div>
-    </form>
   );
 }
 
