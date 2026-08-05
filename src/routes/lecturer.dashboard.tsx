@@ -60,28 +60,24 @@ function LecturerDashboard() {
     const { data: myCourses } = await supabase
       .from("courses").select("id, code, title, units, level, semester").eq("lecturer_id", userId).order("code");
     const ids = (myCourses ?? []).map((c: any) => c.id);
-    const [en, asg, ex, ses, res, tt] = await Promise.all([
+    const [en, asg, ex, res, tt] = await Promise.all([
       ids.length ? supabase.from("enrollments").select("id, course_id, student_id, profiles:student_id(full_name, email)").in("course_id", ids) : { data: [] },
       ids.length ? supabase.from("assignments").select("id, title, due_date, max_score, course_id, courses(code)").in("course_id", ids) : { data: [] },
       ids.length ? supabase.from("exams").select("id, title, duration_minutes, is_published, course_id, courses(code)").in("course_id", ids) : { data: [] },
-      ids.length ? supabase.from("attendance_sessions").select("id, title, session_code, held_on, course_id, courses(code)").in("course_id", ids).order("held_on", { ascending: false }) : { data: [] },
       ids.length ? supabase.from("results").select("id, score, grade, session, semester, student_id, course_id, courses(code)").in("course_id", ids) : { data: [] },
       ids.length ? supabase.from("timetable_entries").select("id, day_of_week, start_time, end_time, venue, course_id, courses(code)").in("course_id", ids) : { data: [] },
     ]);
     const asgIds = (asg.data ?? []).map((a: any) => a.id);
-    const [subs, recs] = await Promise.all([
-      asgIds.length ? supabase.from("submissions").select("id, assignment_id, student_id, content, score, feedback, profiles:student_id(full_name)").in("assignment_id", asgIds) : { data: [] },
-      (ses.data ?? []).length ? supabase.from("attendance_records").select("id, session_id, status, student_id, profiles:student_id(full_name)").in("session_id", (ses.data ?? []).map((s: any) => s.id)) : { data: [] },
-    ]);
+    const subs = asgIds.length
+      ? await supabase.from("submissions").select("id, assignment_id, student_id, content, score, feedback, profiles:student_id(full_name)").in("assignment_id", asgIds)
+      : { data: [] as any[] };
     setCourses(myCourses ?? []);
     setEnrollments(en.data ?? []);
     setAssignments(asg.data ?? []);
     setExams(ex.data ?? []);
-    setAttSessions(ses.data ?? []);
     setResults(res.data ?? []);
     setTimetable(tt.data ?? []);
     setSubmissions(subs.data ?? []);
-    setAttRecords(recs.data ?? []);
     setLoading(false);
   }, [userId]);
 
