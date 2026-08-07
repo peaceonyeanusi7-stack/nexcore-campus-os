@@ -12,6 +12,7 @@ import { ProfilePanel } from "@/components/dashboard/ProfilePanel";
 import { PageTitle, Panel, StatCard, Empty, Rows, Row, Pill, Field, inputClass, btnPrimary, btnGhost } from "@/components/dashboard/kit";
 import { useLecturerCourses, LecturerCoursesPanel } from "@/components/courses/LecturerCourses";
 import { useLecturerAttendance, LecturerAttendancePanel } from "@/components/attendance/LecturerAttendance";
+import { useLecturerAssignments, LecturerAssignmentsPanel } from "@/components/assignments/LecturerAssignments";
 
 export const Route = createFileRoute("/lecturer/dashboard")({
   ssr: false,
@@ -46,13 +47,12 @@ function LecturerDashboard() {
   const [msg, setMsg] = useState<string | null>(null);
   const [courses, setCourses] = useState<any[]>([]);
   const [enrollments, setEnrollments] = useState<any[]>([]);
-  const [assignments, setAssignments] = useState<any[]>([]);
-  const [submissions, setSubmissions] = useState<any[]>([]);
   const [exams, setExams] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [timetable, setTimetable] = useState<any[]>([]);
   const reg = useLecturerCourses(userId ?? null);
   const att = useLecturerAttendance(userId ?? null);
+  const asg = useLecturerAssignments(userId ?? null);
 
   const loadAll = useCallback(async () => {
     if (!userId) return;
@@ -60,24 +60,17 @@ function LecturerDashboard() {
     const { data: myCourses } = await supabase
       .from("courses").select("id, code, title, units, level, semester").eq("lecturer_id", userId).order("code");
     const ids = (myCourses ?? []).map((c: any) => c.id);
-    const [en, asg, ex, res, tt] = await Promise.all([
+    const [en, ex, res, tt] = await Promise.all([
       ids.length ? supabase.from("enrollments").select("id, course_id, student_id, profiles:student_id(full_name, email)").in("course_id", ids) : { data: [] },
-      ids.length ? supabase.from("assignments").select("id, title, due_date, max_score, course_id, courses(code)").in("course_id", ids) : { data: [] },
       ids.length ? supabase.from("exams").select("id, title, duration_minutes, is_published, course_id, courses(code)").in("course_id", ids) : { data: [] },
       ids.length ? supabase.from("results").select("id, score, grade, session, semester, student_id, course_id, courses(code)").in("course_id", ids) : { data: [] },
       ids.length ? supabase.from("timetable_entries").select("id, day_of_week, start_time, end_time, venue, course_id, courses(code)").in("course_id", ids) : { data: [] },
     ]);
-    const asgIds = (asg.data ?? []).map((a: any) => a.id);
-    const subs = asgIds.length
-      ? await supabase.from("submissions").select("id, assignment_id, student_id, content, score, feedback, profiles:student_id(full_name)").in("assignment_id", asgIds)
-      : { data: [] as any[] };
     setCourses(myCourses ?? []);
     setEnrollments(en.data ?? []);
-    setAssignments(asg.data ?? []);
     setExams(ex.data ?? []);
     setResults(res.data ?? []);
     setTimetable(tt.data ?? []);
-    setSubmissions(subs.data ?? []);
     setLoading(false);
   }, [userId]);
 
@@ -110,7 +103,7 @@ function LecturerDashboard() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard icon={BookOpen} label="Assigned courses" value={reg.courses.length} />
             <StatCard icon={Users} label="Enrolled students" value={new Set(reg.rows.map((r) => r.student_id)).size} hint={`${reg.rows.length} course registrations`} />
-            <StatCard icon={FileText} label="Submissions to grade" value={submissions.filter((s) => s.score == null).length} />
+            <StatCard icon={FileText} label="Submissions to grade" value={asg.stats.pending} />
             <StatCard icon={QrCode} label="Active sessions" value={att.activeSessions.length} hint={`${att.presentToday} present today · ${att.rate}% rate`} />
           </div>
           <div className="mt-6">
@@ -160,27 +153,9 @@ function LecturerDashboard() {
         </>
       )}
 
-      {active === "assignments" && (
-        <>
-          <PageTitle title="Assignments" subtitle="Upload assignments and grade submissions." />
-          <Panel title="Upload assignment">
-            <AssignmentForm courses={courses} userId={userId!} onDone={() => flash("Assignment published.")} />
-          </Panel>
-          <div className="mt-6 space-y-4">
-            {assignments.map((a) => (
-              <Panel key={a.id} title={`${a.courses?.code} · ${a.title}`}>
-                {submissions.filter((s) => s.assignment_id === a.id).length ? (
-                  <Rows>
-                    {submissions.filter((s) => s.assignment_id === a.id).map((s) => (
-                      <GradeRow key={s.id} submission={s} max={a.max_score} onDone={() => flash("Grade saved.")} />
-                    ))}
-                  </Rows>
-                ) : <Empty message="No submissions yet." />}
-              </Panel>
-            ))}
-          </div>
-        </>
-      )}
+      {active === "assignments" && userId ? (
+        <LecturerAssignmentsPanel state={asg} lecturerId={userId} />
+      ) : null}
 
       {active === "exams" && (
         <>
@@ -276,65 +251,6 @@ function CourseForm({ lecturerId, onDone }: { lecturerId: string; onDone: () => 
       </div>
       <button type="submit" className={`${btnPrimary} sm:col-span-2 lg:col-span-1`}>Create course</button>
     </form>
-  );
-}
-
-function AssignmentForm({ courses, userId, onDone }: any) {
-  const [courseId, setCourseId] = useState("");
-  const [title, setTitle] = useState("");
-  const [instructions, setInstructions] = useState("");
-  const [due, setDue] = useState("");
-  return (
-    <form
-      className="grid gap-4 sm:grid-cols-2"
-      onSubmit={async (e) => {
-        e.preventDefault();
-        await supabase.from("assignments").insert({
-          course_id: courseId, title, instructions, created_by: userId,
-          due_date: due ? new Date(due).toISOString() : null,
-        });
-        setTitle(""); setInstructions(""); setDue("");
-        onDone();
-      }}
-    >
-      <Field label="Course">
-        <select required className={inputClass} value={courseId} onChange={(e) => setCourseId(e.target.value)}>
-          <option value="">Select course</option>
-          {courses.map((c: any) => <option key={c.id} value={c.id}>{c.code} — {c.title}</option>)}
-        </select>
-      </Field>
-      <Field label="Title"><input required className={inputClass} value={title} onChange={(e) => setTitle(e.target.value)} /></Field>
-      <Field label="Instructions"><input className={inputClass} value={instructions} onChange={(e) => setInstructions(e.target.value)} /></Field>
-      <Field label="Due date"><input type="datetime-local" className={inputClass} value={due} onChange={(e) => setDue(e.target.value)} /></Field>
-      <button type="submit" className={btnPrimary}>Publish assignment</button>
-    </form>
-  );
-}
-
-function GradeRow({ submission, max, onDone }: any) {
-  const [score, setScore] = useState(submission.score ?? "");
-  const [feedback, setFeedback] = useState(submission.feedback ?? "");
-  return (
-    <Row>
-      <span className="min-w-40">
-        <span className="font-medium">{submission.profiles?.full_name ?? "Student"}</span>
-        <span className="block max-w-md truncate text-xs text-ink-muted">{submission.content}</span>
-      </span>
-      <span className="flex flex-wrap items-center gap-2">
-        <input className={`${inputClass} h-9 w-20`} value={score} onChange={(e) => setScore(e.target.value)} placeholder={`/${max}`} />
-        <input className={`${inputClass} h-9 w-40`} value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder="Feedback" />
-        <button
-          type="button"
-          className={btnGhost}
-          onClick={async () => {
-            await supabase.from("submissions").update({ score: score === "" ? null : Number(score), feedback }).eq("id", submission.id);
-            onDone();
-          }}
-        >
-          Save
-        </button>
-      </span>
-    </Row>
   );
 }
 

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-  LayoutDashboard, User, GraduationCap, Users, BookOpen, Wallet, QrCode,
+  LayoutDashboard, User, GraduationCap, Users, BookOpen, Wallet, QrCode, FileText,
   BarChart3, Settings, Loader2, CheckCircle2, Building2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ import { PageTitle, Panel, StatCard, Empty, Rows, Row, Pill, Field, inputClass, 
 import { StudentManager } from "@/components/students/StudentManager";
 import { useAdminCourses, AdminCoursesPanel } from "@/components/courses/AdminCourses";
 import { useAdminAttendance, AdminAttendancePanel } from "@/components/attendance/AdminAttendance";
+import { useAdminAssignments, AdminAssignmentsPanel } from "@/components/assignments/AdminAssignments";
 import type { Student } from "@/lib/students";
 
 export const Route = createFileRoute("/admin/dashboard")({
@@ -34,6 +35,7 @@ const sections: DashboardSection[] = [
   { key: "lecturers", label: "Lecturers", icon: Users },
   { key: "courses", label: "Courses", icon: BookOpen },
   { key: "attendance", label: "Attendance", icon: QrCode },
+  { key: "assignments", label: "Assignments", icon: FileText },
   { key: "fees", label: "Fees", icon: Wallet },
   { key: "analytics", label: "Analytics", icon: BarChart3 },
   { key: "settings", label: "School settings", icon: Settings },
@@ -55,6 +57,7 @@ function AdminDashboard() {
   const [studentRows, setStudentRows] = useState<Student[]>([]);
   const courseState = useAdminCourses();
   const attState = useAdminAttendance();
+  const asgState = useAdminAssignments();
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -175,6 +178,8 @@ function AdminDashboard() {
       )}
 
       {active === "attendance" && <AdminAttendancePanel state={attState} />}
+
+      {active === "assignments" && <AdminAssignmentsPanel state={asgState} />}
 
       {active === "fees" && (
         <>

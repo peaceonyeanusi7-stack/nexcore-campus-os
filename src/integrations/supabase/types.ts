@@ -16,34 +16,46 @@ export type Database = {
     Tables: {
       assignments: {
         Row: {
+          attachment_url: string | null
           course_id: string
           created_at: string
           created_by: string | null
+          description: string | null
           due_date: string | null
           id: string
           instructions: string | null
           max_score: number
+          status: string
           title: string
+          updated_at: string
         }
         Insert: {
+          attachment_url?: string | null
           course_id: string
           created_at?: string
           created_by?: string | null
+          description?: string | null
           due_date?: string | null
           id?: string
           instructions?: string | null
           max_score?: number
+          status?: string
           title: string
+          updated_at?: string
         }
         Update: {
+          attachment_url?: string | null
           course_id?: string
           created_at?: string
           created_by?: string | null
+          description?: string | null
           due_date?: string | null
           id?: string
           instructions?: string | null
           max_score?: number
+          status?: string
           title?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -669,30 +681,42 @@ export type Database = {
           content: string | null
           feedback: string | null
           file_url: string | null
+          graded_by: string | null
+          grading_date: string | null
           id: string
           score: number | null
+          status: string
           student_id: string
           submitted_at: string
+          updated_at: string
         }
         Insert: {
           assignment_id: string
           content?: string | null
           feedback?: string | null
           file_url?: string | null
+          graded_by?: string | null
+          grading_date?: string | null
           id?: string
           score?: number | null
+          status?: string
           student_id: string
           submitted_at?: string
+          updated_at?: string
         }
         Update: {
           assignment_id?: string
           content?: string | null
           feedback?: string | null
           file_url?: string | null
+          graded_by?: string | null
+          grading_date?: string | null
           id?: string
           score?: number | null
+          status?: string
           student_id?: string
           submitted_at?: string
+          updated_at?: string
         }
         Relationships: [
           {
