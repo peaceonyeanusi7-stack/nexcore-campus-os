@@ -13,6 +13,7 @@ import { StudentProfilePanel } from "@/components/students/StudentProfilePanel";
 import { StudentAvatar } from "@/components/students/StudentAvatar";
 import { useCourseRegistration, CourseRegistrationPanel } from "@/components/courses/CourseRegistration";
 import { useStudentAttendance, StudentAttendancePanel } from "@/components/attendance/StudentAttendance";
+import { useStudentAssignments, StudentAssignmentsPanel } from "@/components/assignments/StudentAssignments";
 import type { Student } from "@/lib/students";
 
 export const Route = createFileRoute("/student/dashboard")({
@@ -49,8 +50,6 @@ function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrolled, setEnrolled] = useState<string[]>([]);
-  const [assignments, setAssignments] = useState<any[]>([]);
-  const [submissions, setSubmissions] = useState<any[]>([]);
   const [exams, setExams] = useState<any[]>([]);
   const [attempts, setAttempts] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
@@ -60,15 +59,14 @@ function StudentDashboard() {
   const [msg, setMsg] = useState<string | null>(null);
   const reg = useCourseRegistration(userId ?? null, student);
   const att = useStudentAttendance(userId ?? null);
+  const asg = useStudentAssignments(userId ?? null);
 
   const loadAll = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
-    const [c, e, a, s, x, at, r, t, n, me] = await Promise.all([
+    const [c, e, x, at, r, t, n, me] = await Promise.all([
       supabase.from("courses").select("id, code, title, units, level, semester").order("code"),
       supabase.from("enrollments").select("course_id").eq("student_id", userId),
-      supabase.from("assignments").select("id, title, instructions, due_date, max_score, course_id, courses(code, title)").order("due_date"),
-      supabase.from("submissions").select("id, assignment_id, content, score, feedback").eq("student_id", userId),
       supabase.from("exams").select("id, title, duration_minutes, starts_at, is_published, course_id, courses(code)").eq("is_published", true),
       supabase.from("exam_attempts").select("id, exam_id, score, submitted_at").eq("student_id", userId),
       supabase.from("results").select("id, score, grade, session, semester, courses(code, title, units)").eq("student_id", userId),
@@ -78,8 +76,6 @@ function StudentDashboard() {
     ]);
     setCourses((c.data as Course[]) ?? []);
     setEnrolled((e.data ?? []).map((row: any) => row.course_id));
-    setAssignments(a.data ?? []);
-    setSubmissions(s.data ?? []);
     setExams(x.data ?? []);
     setAttempts(at.data ?? []);
     setResults(r.data ?? []);
@@ -91,7 +87,6 @@ function StudentDashboard() {
 
   useEffect(() => { void loadAll(); }, [loadAll]);
 
-  const myAssignments = useMemo(() => assignments.filter((a) => enrolled.includes(a.course_id)), [assignments, enrolled]);
   const myExams = useMemo(() => exams.filter((x) => enrolled.includes(x.course_id)), [exams, enrolled]);
   const gpa = useMemo(() => {
     if (!results.length) return "—";
@@ -158,13 +153,13 @@ function StudentDashboard() {
           </div>
           <div className="mt-6 grid gap-6 lg:grid-cols-2">
             <Panel title="Upcoming assignments">
-              {myAssignments.length ? (
+              {asg.assignments.length ? (
                 <Rows>
-                  {myAssignments.slice(0, 5).map((a) => (
+                  {asg.assignments.slice(0, 5).map((a) => (
                     <Row key={a.id}>
                       <span className="font-medium">{a.courses?.code} · {a.title}</span>
-                      <Pill tone={submissions.some((s) => s.assignment_id === a.id) ? "good" : "warn"}>
-                        {submissions.some((s) => s.assignment_id === a.id) ? "Submitted" : "Pending"}
+                      <Pill tone={asg.submissions.some((s) => s.assignment_id === a.id) ? "good" : "warn"}>
+                        {asg.submissions.some((s) => s.assignment_id === a.id) ? "Submitted" : "Pending"}
                       </Pill>
                     </Row>
                   ))}
@@ -196,16 +191,9 @@ function StudentDashboard() {
         <CourseRegistrationPanel reg={reg} />
       )}
 
-      {active === "assignments" && (
-        <>
-          <PageTitle title="Assignments" subtitle="Submit your work and track feedback." />
-          <div className="space-y-4">
-            {myAssignments.length ? myAssignments.map((a) => (
-              <AssignmentCard key={a.id} assignment={a} submission={submissions.find((s) => s.assignment_id === a.id)} studentId={userId!} onDone={loadAll} />
-            )) : <Empty message="No assignments for your registered courses yet." />}
-          </div>
-        </>
-      )}
+      {active === "assignments" && userId ? (
+        <StudentAssignmentsPanel state={asg} studentId={userId} />
+      ) : null}
 
       {active === "exams" && (
         <>
@@ -301,42 +289,6 @@ function FullLoader() {
     <div className="flex items-center gap-2 py-10 text-sm text-ink-muted">
       <Loader2 className="size-4 animate-spin" /> Loading your campus data…
     </div>
-  );
-}
-
-function AssignmentCard({ assignment, submission, studentId, onDone }: any) {
-  const [content, setContent] = useState(submission?.content ?? "");
-  const [busy, setBusy] = useState(false);
-  return (
-    <Panel title={`${assignment.courses?.code ?? ""} · ${assignment.title}`}>
-      {assignment.instructions ? <p className="mb-3 text-sm text-ink-muted">{assignment.instructions}</p> : null}
-      <p className="mb-3 text-xs text-ink-muted">
-        Due {assignment.due_date ? new Date(assignment.due_date).toLocaleString() : "—"} · Max score {assignment.max_score}
-      </p>
-      {submission?.score != null ? (
-        <Pill tone="good">Graded: {submission.score}/{assignment.max_score}{submission.feedback ? ` — ${submission.feedback}` : ""}</Pill>
-      ) : null}
-      <textarea
-        className={`${inputClass} mt-3 h-28 py-2.5`}
-        placeholder="Type your answer or paste a link to your work"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-      />
-      <button
-        type="button"
-        disabled={busy || !content.trim()}
-        className={`${btnPrimary} mt-3`}
-        onClick={async () => {
-          setBusy(true);
-          if (submission) await supabase.from("submissions").update({ content }).eq("id", submission.id);
-          else await supabase.from("submissions").insert({ assignment_id: assignment.id, student_id: studentId, content });
-          setBusy(false);
-          onDone();
-        }}
-      >
-        {submission ? "Update submission" : "Submit"}
-      </button>
-    </Panel>
   );
 }
 
