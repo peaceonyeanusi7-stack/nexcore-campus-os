@@ -103,7 +103,7 @@ function LecturerDashboard() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard icon={BookOpen} label="Assigned courses" value={reg.courses.length} />
             <StatCard icon={Users} label="Enrolled students" value={new Set(reg.rows.map((r) => r.student_id)).size} hint={`${reg.rows.length} course registrations`} />
-            <StatCard icon={FileText} label="Submissions to grade" value={submissions.filter((s) => s.score == null).length} />
+            <StatCard icon={FileText} label="Submissions to grade" value={asg.stats.pending} />
             <StatCard icon={QrCode} label="Active sessions" value={att.activeSessions.length} hint={`${att.presentToday} present today · ${att.rate}% rate`} />
           </div>
           <div className="mt-6">
