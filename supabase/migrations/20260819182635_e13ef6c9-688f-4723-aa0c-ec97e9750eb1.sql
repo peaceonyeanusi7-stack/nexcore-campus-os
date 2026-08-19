@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.exam_questions_sync_total() FROM PUBLIC, anon, authenticated;

@@ -296,28 +296,40 @@ export type Database = {
       exam_attempts: {
         Row: {
           answers: Json
+          auto_submitted: boolean
           created_at: string
           exam_id: string
           id: string
+          percentage: number | null
           score: number | null
+          started_at: string
+          status: string
           student_id: string
           submitted_at: string | null
         }
         Insert: {
           answers?: Json
+          auto_submitted?: boolean
           created_at?: string
           exam_id: string
           id?: string
+          percentage?: number | null
           score?: number | null
+          started_at?: string
+          status?: string
           student_id: string
           submitted_at?: string | null
         }
         Update: {
           answers?: Json
+          auto_submitted?: boolean
           created_at?: string
           exam_id?: string
           id?: string
+          percentage?: number | null
           score?: number | null
+          started_at?: string
+          status?: string
           student_id?: string
           submitted_at?: string | null
         }
@@ -333,28 +345,43 @@ export type Database = {
       }
       exam_questions: {
         Row: {
-          correct_index: number
+          correct_index: number | null
+          created_at: string
           exam_id: string
           id: string
-          options: Json
-          position: number
-          prompt: string
+          marks: number
+          options: Json | null
+          position: number | null
+          prompt: string | null
+          question_order: number
+          question_text: string | null
+          question_type: string
         }
         Insert: {
-          correct_index?: number
+          correct_index?: number | null
+          created_at?: string
           exam_id: string
           id?: string
-          options?: Json
-          position?: number
-          prompt: string
+          marks?: number
+          options?: Json | null
+          position?: number | null
+          prompt?: string | null
+          question_order?: number
+          question_text?: string | null
+          question_type?: string
         }
         Update: {
-          correct_index?: number
+          correct_index?: number | null
+          created_at?: string
           exam_id?: string
           id?: string
-          options?: Json
-          position?: number
-          prompt?: string
+          marks?: number
+          options?: Json | null
+          position?: number | null
+          prompt?: string | null
+          question_order?: number
+          question_text?: string | null
+          question_type?: string
         }
         Relationships: [
           {
@@ -368,34 +395,67 @@ export type Database = {
       }
       exams: {
         Row: {
+          allow_multiple_attempts: boolean
+          allow_result_review: boolean
           course_id: string
           created_at: string
           created_by: string | null
+          description: string | null
           duration_minutes: number
+          end_time: string | null
           id: string
+          instructions: string | null
           is_published: boolean
+          lecturer_id: string | null
+          pass_mark: number
+          start_time: string | null
           starts_at: string | null
+          status: string
           title: string
+          total_marks: number
+          updated_at: string
         }
         Insert: {
+          allow_multiple_attempts?: boolean
+          allow_result_review?: boolean
           course_id: string
           created_at?: string
           created_by?: string | null
+          description?: string | null
           duration_minutes?: number
+          end_time?: string | null
           id?: string
+          instructions?: string | null
           is_published?: boolean
+          lecturer_id?: string | null
+          pass_mark?: number
+          start_time?: string | null
           starts_at?: string | null
+          status?: string
           title: string
+          total_marks?: number
+          updated_at?: string
         }
         Update: {
+          allow_multiple_attempts?: boolean
+          allow_result_review?: boolean
           course_id?: string
           created_at?: string
           created_by?: string | null
+          description?: string | null
           duration_minutes?: number
+          end_time?: string | null
           id?: string
+          instructions?: string | null
           is_published?: boolean
+          lecturer_id?: string | null
+          pass_mark?: number
+          start_time?: string | null
           starts_at?: string | null
+          status?: string
           title?: string
+          total_marks?: number
+          updated_at?: string
         }
         Relationships: [
           {
@@ -547,6 +607,41 @@ export type Database = {
           },
         ]
       }
+      question_options: {
+        Row: {
+          created_at: string
+          id: string
+          is_correct: boolean
+          option_order: number
+          option_text: string
+          question_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          option_order?: number
+          option_text: string
+          question_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          option_order?: number
+          option_text?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "exam_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       registration_periods: {
         Row: {
           closes_at: string
@@ -620,6 +715,67 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_answers: {
+        Row: {
+          answer_text: string | null
+          attempt_id: string
+          created_at: string
+          feedback: string | null
+          id: string
+          is_correct: boolean | null
+          marks_awarded: number | null
+          question_id: string
+          selected_option_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          answer_text?: string | null
+          attempt_id: string
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          is_correct?: boolean | null
+          marks_awarded?: number | null
+          question_id: string
+          selected_option_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          answer_text?: string | null
+          attempt_id?: string
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          is_correct?: boolean | null
+          marks_awarded?: number | null
+          question_id?: string
+          selected_option_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_answers_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "exam_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "exam_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_answers_selected_option_id_fkey"
+            columns: ["selected_option_id"]
+            isOneToOne: false
+            referencedRelation: "question_options"
             referencedColumns: ["id"]
           },
         ]
@@ -833,6 +989,23 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_exam_paper: {
+        Args: { _attempt_id: string }
+        Returns: {
+          answer_text: string
+          marks: number
+          options: Json
+          question_id: string
+          question_order: number
+          question_text: string
+          question_type: string
+          selected_option_id: string
+        }[]
+      }
+      grade_short_answer: {
+        Args: { _answer_id: string; _feedback?: string; _marks: number }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -840,6 +1013,22 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_exam_owner: { Args: { _exam_id: string }; Returns: boolean }
+      recalc_attempt_score: {
+        Args: { _attempt_id: string }
+        Returns: undefined
+      }
+      save_exam_answer: {
+        Args: {
+          _answer_text?: string
+          _attempt_id: string
+          _question_id: string
+          _selected_option_id?: string
+        }
+        Returns: undefined
+      }
+      start_exam_attempt: { Args: { _exam_id: string }; Returns: string }
+      submit_exam_attempt: { Args: { _attempt_id: string }; Returns: string }
     }
     Enums: {
       app_role: "student" | "lecturer" | "admin"
