@@ -139,3 +139,12 @@ export async function submitAttempt(attemptId: string) {
   const { error } = await supabase.rpc("submit_exam_attempt", { _attempt_id: attemptId });
   if (error) throw error;
 }
+
+export async function gradeShortAnswer(answerId: string, marks: number, feedback: string) {
+  const { error } = await supabase.rpc("grade_short_answer", {
+    _answer_id: answerId,
+    _marks: marks,
+    _feedback: feedback || null,
+  });
+  if (error) throw error;
+}

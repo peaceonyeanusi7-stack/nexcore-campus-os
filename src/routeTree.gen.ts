@@ -21,6 +21,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as StudentDashboardRouteImport } from './routes/student.dashboard'
 import { Route as LecturerDashboardRouteImport } from './routes/lecturer.dashboard'
+import { Route as ExamAttemptIdRouteImport } from './routes/exam.$attemptId'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 
 const SolutionsRoute = SolutionsRouteImport.update({
@@ -83,6 +84,11 @@ const LecturerDashboardRoute = LecturerDashboardRouteImport.update({
   path: '/lecturer/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExamAttemptIdRoute = ExamAttemptIdRouteImport.update({
+  id: '/exam/$attemptId',
+  path: '/exam/$attemptId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/admin/dashboard',
   path: '/admin/dashboard',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solutions': typeof SolutionsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/exam/$attemptId': typeof ExamAttemptIdRoute
   '/lecturer/dashboard': typeof LecturerDashboardRoute
   '/student/dashboard': typeof StudentDashboardRoute
 }
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solutions': typeof SolutionsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/exam/$attemptId': typeof ExamAttemptIdRoute
   '/lecturer/dashboard': typeof LecturerDashboardRoute
   '/student/dashboard': typeof StudentDashboardRoute
 }
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solutions': typeof SolutionsRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/exam/$attemptId': typeof ExamAttemptIdRoute
   '/lecturer/dashboard': typeof LecturerDashboardRoute
   '/student/dashboard': typeof StudentDashboardRoute
 }
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solutions'
     | '/admin/dashboard'
+    | '/exam/$attemptId'
     | '/lecturer/dashboard'
     | '/student/dashboard'
   fileRoutesByTo: FileRoutesByTo
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solutions'
     | '/admin/dashboard'
+    | '/exam/$attemptId'
     | '/lecturer/dashboard'
     | '/student/dashboard'
   id:
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/solutions'
     | '/admin/dashboard'
+    | '/exam/$attemptId'
     | '/lecturer/dashboard'
     | '/student/dashboard'
   fileRoutesById: FileRoutesById
@@ -195,6 +207,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SolutionsRoute: typeof SolutionsRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
+  ExamAttemptIdRoute: typeof ExamAttemptIdRoute
   LecturerDashboardRoute: typeof LecturerDashboardRoute
   StudentDashboardRoute: typeof StudentDashboardRoute
 }
@@ -285,6 +298,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LecturerDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/exam/$attemptId': {
+      id: '/exam/$attemptId'
+      path: '/exam/$attemptId'
+      fullPath: '/exam/$attemptId'
+      preLoaderRoute: typeof ExamAttemptIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/dashboard': {
       id: '/admin/dashboard'
       path: '/admin/dashboard'
@@ -307,6 +327,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SolutionsRoute: SolutionsRoute,
   AdminDashboardRoute: AdminDashboardRoute,
+  ExamAttemptIdRoute: ExamAttemptIdRoute,
   LecturerDashboardRoute: LecturerDashboardRoute,
   StudentDashboardRoute: StudentDashboardRoute,
 }
