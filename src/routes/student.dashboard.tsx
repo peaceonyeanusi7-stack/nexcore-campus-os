@@ -14,6 +14,7 @@ import { StudentAvatar } from "@/components/students/StudentAvatar";
 import { useCourseRegistration, CourseRegistrationPanel } from "@/components/courses/CourseRegistration";
 import { useStudentAttendance, StudentAttendancePanel } from "@/components/attendance/StudentAttendance";
 import { useStudentAssignments, StudentAssignmentsPanel } from "@/components/assignments/StudentAssignments";
+import { StudentExamsPanel, useStudentExams } from "@/components/exams/StudentExams";
 import type { Student } from "@/lib/students";
 
 export const Route = createFileRoute("/student/dashboard")({
@@ -60,6 +61,7 @@ function StudentDashboard() {
   const reg = useCourseRegistration(userId ?? null, student);
   const att = useStudentAttendance(userId ?? null);
   const asg = useStudentAssignments(userId ?? null);
+  const examState = useStudentExams(userId ?? null);
 
   const loadAll = useCallback(async () => {
     if (!userId) return;
@@ -196,14 +198,7 @@ function StudentDashboard() {
       ) : null}
 
       {active === "exams" && (
-        <>
-          <PageTitle title="CBT exams" subtitle="Take computer-based tests published for your courses." />
-          <div className="space-y-4">
-            {myExams.length ? myExams.map((x) => (
-              <ExamCard key={x.id} exam={x} attempt={attempts.find((at) => at.exam_id === x.id)} studentId={userId!} onDone={loadAll} />
-            )) : <Empty message="No published exams for your courses yet." />}
-          </div>
-        </>
+        <StudentExamsPanel state={examState} />
       )}
 
       {active === "results" && (

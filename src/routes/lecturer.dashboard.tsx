@@ -13,6 +13,7 @@ import { PageTitle, Panel, StatCard, Empty, Rows, Row, Pill, Field, inputClass, 
 import { useLecturerCourses, LecturerCoursesPanel } from "@/components/courses/LecturerCourses";
 import { useLecturerAttendance, LecturerAttendancePanel } from "@/components/attendance/LecturerAttendance";
 import { useLecturerAssignments, LecturerAssignmentsPanel } from "@/components/assignments/LecturerAssignments";
+import { LecturerExamsPanel, useLecturerExams } from "@/components/exams/LecturerExams";
 
 export const Route = createFileRoute("/lecturer/dashboard")({
   ssr: false,
@@ -53,6 +54,7 @@ function LecturerDashboard() {
   const reg = useLecturerCourses(userId ?? null);
   const att = useLecturerAttendance(userId ?? null);
   const asg = useLecturerAssignments(userId ?? null);
+  const examState = useLecturerExams(userId ?? null);
 
   const loadAll = useCallback(async () => {
     if (!userId) return;
@@ -158,17 +160,7 @@ function LecturerDashboard() {
       ) : null}
 
       {active === "exams" && (
-        <>
-          <PageTitle title="CBT exams" subtitle="Create exams and add multiple-choice questions." />
-          <Panel title="New exam">
-            <ExamForm courses={courses} userId={userId!} onDone={() => flash("Exam created.")} />
-          </Panel>
-          <div className="mt-6 space-y-4">
-            {exams.length ? exams.map((x) => (
-              <ExamEditor key={x.id} exam={x} onDone={() => flash("Exam updated.")} />
-            )) : <Empty message="No exams yet." />}
-          </div>
-        </>
+        userId ? <LecturerExamsPanel state={examState} lecturerId={userId} /> : null
       )}
 
       {active === "attendance" && userId ? (
