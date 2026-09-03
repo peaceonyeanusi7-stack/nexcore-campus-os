@@ -81,7 +81,7 @@ function ExamForm({ courses, onSubmit }: { courses: Course[]; onSubmit: (payload
     <Field label="Opens"><input type="datetime-local" className={inputClass} value={start} onChange={(event) => setStart(event.target.value)} /></Field><Field label="Closes"><input type="datetime-local" className={inputClass} value={end} onChange={(event) => setEnd(event.target.value)} /></Field>
     <div className="flex items-end gap-5 pb-2 sm:col-span-2"><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={review} onChange={(event) => setReview(event.target.checked)} /> Allow result review</label><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={multiple} onChange={(event) => setMultiple(event.target.checked)} /> Multiple attempts</label></div>
     <div className="sm:col-span-2"><Field label="Description"><input className={inputClass} value={description} onChange={(event) => setDescription(event.target.value)} /></Field></div><div className="sm:col-span-2"><Field label="Instructions"><textarea className={`${inputClass} h-20 py-2.5`} value={instructions} onChange={(event) => setInstructions(event.target.value)} /></Field></div>
-    <button disabled={busy} className="sm:col-span-2 lg:col-span-1" type="submit" className={btnPrimary}><Plus className="size-4" /> {busy ? "Creating…" : "Create draft"}</button>
+    <button disabled={busy} className={`${btnPrimary} sm:col-span-2 lg:col-span-1`} type="submit"><Plus className="size-4" /> {busy ? "Creating…" : "Create draft"}</button>
   </form>;
 }
 
