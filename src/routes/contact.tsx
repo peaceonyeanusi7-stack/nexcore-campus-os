@@ -26,9 +26,9 @@ function ContactPage() {
       <section className="container-page grid gap-12 py-20 lg:grid-cols-[1fr_1.2fr]">
         <div className="space-y-6">
           {[
-            { icon: Mail, label: "Email", value: "hello@nexcore.africa" },
-            { icon: Phone, label: "Phone", value: "+234 (0) 800 000 0000" },
-            { icon: MapPin, label: "Office", value: "Lagos · Accra · Nairobi" },
+            { icon: Mail, label: "Email", value: "peaceonyeanusi7@gmail.com" },
+            { icon: Phone, label: "Phone", value: "+234 901 868 7197" },
+            { icon: MapPin, label: "Office", value: "Enugu, Nigeria" },
           ].map((c) => (
             <div key={c.label} className="flex items-start gap-4 rounded-2xl border border-border bg-surface-elevated p-5">
               <span className="grid size-10 place-items-center rounded-xl bg-brand-soft text-brand"><c.icon className="size-5" /></span>
