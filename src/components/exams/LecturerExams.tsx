@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { BarChart3, CheckCircle2, ChevronDown, ChevronUp, FilePlus2, Loader2, Plus, Trash2, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import { friendlyError, formatDT, gradeShortAnswer, QUESTION_TYPES, QUESTION_TYPE_LABELS, type Exam, type QuestionType } from "@/lib/exams";
 import { PageTitle, Panel, StatCard, Empty, Pill, Field, inputClass, btnPrimary, btnGhost, Rows, Row } from "@/components/dashboard/kit";
 
