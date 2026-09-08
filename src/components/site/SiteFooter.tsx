@@ -6,8 +6,8 @@ const cols = [
     links: [
       { to: "/features", label: "Features" },
       { to: "/solutions", label: "Solutions" },
-      { to: "/pricing", label: "Pricing" },
-      { to: "/demo", label: "Request a demo" },
+      { to: "/signup", label: "Get started" },
+      { to: "/login", label: "Sign in" },
     ],
   },
   {
