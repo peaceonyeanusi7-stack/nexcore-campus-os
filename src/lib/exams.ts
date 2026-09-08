@@ -144,7 +144,7 @@ export async function gradeShortAnswer(answerId: string, marks: number, feedback
   const { error } = await supabase.rpc("grade_short_answer", {
     _answer_id: answerId,
     _marks: marks,
-    _feedback: feedback || null,
+    _feedback: feedback || undefined,
   });
   if (error) throw error;
 }
