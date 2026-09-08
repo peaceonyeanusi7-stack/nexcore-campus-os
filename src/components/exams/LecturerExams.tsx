@@ -52,7 +52,7 @@ export function LecturerExamsPanel({ state, lecturerId }: { state: ReturnType<ty
   const { loading, courses, exams, attempts, questions, stats, reload } = state;
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  async function createExam(payload: Omit<ExamInsert, "lecturer_id" | "created_by" | "status" | "is_published">) {
+  async function createExam(payload: NewExamPayload) {
     setError(null);
     const { error: dbError } = await supabase.from("exams").insert({ ...payload, lecturer_id: lecturerId, created_by: lecturerId, status: "draft", is_published: false });
     if (dbError) setError(dbError.message); else { setMessage("Exam draft created."); void reload(); }
