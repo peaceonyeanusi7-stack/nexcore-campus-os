@@ -6,6 +6,8 @@ import { friendlyError, formatDT, gradeShortAnswer, QUESTION_TYPES, QUESTION_TYP
 import { PageTitle, Panel, StatCard, Empty, Pill, Field, inputClass, btnPrimary, btnGhost, Rows, Row } from "@/components/dashboard/kit";
 
 type Course = { id: string; code: string; title: string };
+type ExamInsert = TablesInsert<"exams">;
+type NewExamPayload = Omit<ExamInsert, "lecturer_id" | "created_by" | "status" | "is_published">;
 type ExamRow = Exam & { courses?: { code: string; title: string } | null };
 type Question = { id: string; exam_id: string; question_text: string | null; prompt: string | null; question_type: string; marks: number; question_order: number; position: number | null; options?: { id: string; option_text: string; option_order: number; is_correct: boolean }[] };
 type Attempt = { id: string; exam_id: string; student_id: string; score: number | null; percentage: number | null; status: string; submitted_at: string | null; auto_submitted: boolean; studentName?: string; answers?: Answer[] };
@@ -72,7 +74,7 @@ export function LecturerExamsPanel({ state, lecturerId }: { state: ReturnType<ty
   );
 }
 
-function ExamForm({ courses, onSubmit }: { courses: Course[]; onSubmit: (payload: Record<string, unknown>) => Promise<void> }) {
+function ExamForm({ courses, onSubmit }: { courses: Course[]; onSubmit: (payload: NewExamPayload) => Promise<void> }) {
   const [courseId, setCourseId] = useState(""); const [title, setTitle] = useState(""); const [description, setDescription] = useState(""); const [instructions, setInstructions] = useState(""); const [duration, setDuration] = useState("45"); const [passMark, setPassMark] = useState("50"); const [start, setStart] = useState(""); const [end, setEnd] = useState(""); const [review, setReview] = useState(false); const [multiple, setMultiple] = useState(false); const [busy, setBusy] = useState(false);
   return <form className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4" onSubmit={async (event) => { event.preventDefault(); setBusy(true); await onSubmit({ course_id: courseId, title, description: description || null, instructions: instructions || null, duration_minutes: Number(duration), total_marks: 0, pass_mark: Number(passMark), start_time: start ? new Date(start).toISOString() : null, end_time: end ? new Date(end).toISOString() : null, starts_at: start ? new Date(start).toISOString() : null, allow_result_review: review, allow_multiple_attempts: multiple }); setBusy(false); setTitle(""); }}>
     <Field label="Course"><select required className={inputClass} value={courseId} onChange={(event) => setCourseId(event.target.value)}><option value="">Select course</option>{courses.map((course) => <option key={course.id} value={course.id}>{course.code} — {course.title}</option>)}</select></Field>
