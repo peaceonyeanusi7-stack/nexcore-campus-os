@@ -5,7 +5,7 @@ import { Menu, X } from "lucide-react";
 const links = [
   { to: "/features", label: "Features" },
   { to: "/solutions", label: "Solutions" },
-  { to: "/pricing", label: "Pricing" },
+  
   { to: "/about", label: "About" },
   { to: "/contact", label: "Contact" },
 ] as const;
@@ -41,10 +41,10 @@ export function SiteNav() {
             Sign in
           </Link>
           <Link
-            to="/demo"
+            to="/signup"
             className="inline-flex h-9 items-center rounded-full gradient-brand px-4 text-sm font-medium text-brand-foreground shadow-brand transition-transform hover:-translate-y-0.5"
           >
-            Request a demo
+            Get started
           </Link>
         </div>
         <button
@@ -70,11 +70,11 @@ export function SiteNav() {
               </Link>
             ))}
             <Link
-              to="/demo"
+              to="/signup"
               onClick={() => setOpen(false)}
               className="mt-2 inline-flex h-10 items-center justify-center rounded-full gradient-brand px-4 text-sm font-medium text-brand-foreground"
             >
-              Request a demo
+              Get started
             </Link>
           </div>
         </div>

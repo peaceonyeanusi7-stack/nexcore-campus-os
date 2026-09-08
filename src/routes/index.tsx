@@ -91,17 +91,17 @@ function Home() {
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Link
-                  to="/demo"
+                  to="/signup"
                   className="group inline-flex h-12 items-center gap-2 rounded-full gradient-brand px-6 text-sm font-medium text-brand-foreground shadow-brand transition-transform hover:-translate-y-0.5"
                 >
-                  Request a demo
+                  Get started
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
                 </Link>
                 <Link
-                  to="/signup"
+                  to="/contact"
                   className="inline-flex h-12 items-center gap-2 rounded-full border border-border bg-surface-elevated px-6 text-sm font-medium text-ink hover:border-brand"
                 >
-                  Get started
+                  Contact us
                 </Link>
               </div>
               <dl className="mt-12 grid max-w-lg grid-cols-3 gap-6">
@@ -357,15 +357,15 @@ function Home() {
               Ready to transform your institution?
             </h2>
             <p className="mt-4 text-brand-foreground/80">
-              Book a personalized walkthrough. We'll map NexCore to your workflows and show real
-              outcomes from institutions like yours.
+              Create your account today and see how NexCore unifies attendance, academics,
+              communication and analytics for institutions like yours.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                to="/demo"
+                to="/signup"
                 className="inline-flex h-12 items-center gap-2 rounded-full bg-brand-foreground px-6 text-sm font-semibold text-brand hover:opacity-90"
               >
-                Book a demo <ArrowRight className="size-4" />
+                Get started <ArrowRight className="size-4" />
               </Link>
               <Link
                 to="/contact"
