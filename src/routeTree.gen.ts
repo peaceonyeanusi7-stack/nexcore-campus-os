@@ -9,9 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as SolutionsRouteImport } from './routes/solutions'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -22,6 +24,11 @@ import { Route as LecturerDashboardRouteImport } from './routes/lecturer.dashboa
 import { Route as ExamAttemptIdRouteImport } from './routes/exam.$attemptId'
 import { Route as AdminDashboardRouteImport } from './routes/admin.dashboard'
 
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SolutionsRoute = SolutionsRouteImport.update({
   id: '/solutions',
   path: '/solutions',
@@ -35,6 +42,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -89,9 +101,11 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/features': typeof FeaturesRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solutions': typeof SolutionsRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/exam/$attemptId': typeof ExamAttemptIdRoute
   '/lecturer/dashboard': typeof LecturerDashboardRoute
@@ -103,9 +117,11 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/features': typeof FeaturesRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solutions': typeof SolutionsRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/exam/$attemptId': typeof ExamAttemptIdRoute
   '/lecturer/dashboard': typeof LecturerDashboardRoute
@@ -118,9 +134,11 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/features': typeof FeaturesRoute
   '/login': typeof LoginRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/solutions': typeof SolutionsRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/exam/$attemptId': typeof ExamAttemptIdRoute
   '/lecturer/dashboard': typeof LecturerDashboardRoute
@@ -134,9 +152,11 @@ export interface FileRouteTypes {
     | '/contact'
     | '/features'
     | '/login'
+    | '/reset-password'
     | '/signup'
     | '/sitemap.xml'
     | '/solutions'
+    | '/verify-email'
     | '/admin/dashboard'
     | '/exam/$attemptId'
     | '/lecturer/dashboard'
@@ -148,9 +168,11 @@ export interface FileRouteTypes {
     | '/contact'
     | '/features'
     | '/login'
+    | '/reset-password'
     | '/signup'
     | '/sitemap.xml'
     | '/solutions'
+    | '/verify-email'
     | '/admin/dashboard'
     | '/exam/$attemptId'
     | '/lecturer/dashboard'
@@ -162,9 +184,11 @@ export interface FileRouteTypes {
     | '/contact'
     | '/features'
     | '/login'
+    | '/reset-password'
     | '/signup'
     | '/sitemap.xml'
     | '/solutions'
+    | '/verify-email'
     | '/admin/dashboard'
     | '/exam/$attemptId'
     | '/lecturer/dashboard'
@@ -177,9 +201,11 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   FeaturesRoute: typeof FeaturesRoute
   LoginRoute: typeof LoginRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SolutionsRoute: typeof SolutionsRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   ExamAttemptIdRoute: typeof ExamAttemptIdRoute
   LecturerDashboardRoute: typeof LecturerDashboardRoute
@@ -188,6 +214,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/solutions': {
       id: '/solutions'
       path: '/solutions'
@@ -207,6 +240,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -281,9 +321,11 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   FeaturesRoute: FeaturesRoute,
   LoginRoute: LoginRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SolutionsRoute: SolutionsRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   ExamAttemptIdRoute: ExamAttemptIdRoute,
   LecturerDashboardRoute: LecturerDashboardRoute,

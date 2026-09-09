@@ -3,7 +3,8 @@ import { useState } from "react";
 import { GraduationCap, Presentation, Building2, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isAppRole, ROLE_HOME, ROLE_LABELS, type AppRole } from "@/lib/roles";
-import { btnPrimary, Field, inputClass } from "@/components/dashboard/kit";
+import { btnPrimary, inputClass } from "@/components/dashboard/kit";
+import { PasswordField } from "@/components/auth/PasswordField";
 
 type Search = { role?: string };
 
@@ -37,18 +38,28 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [needsVerification, setNeedsVerification] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setNeedsVerification(false);
+    if (!email.trim()) {
+      setError("Enter your email address.");
+      return;
+    }
     setBusy(true);
     const { data, error: signInError } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
     if (signInError || !data.user) {
-      setError(signInError?.message ?? "Unable to sign in. Please try again.");
+      const unverified = signInError?.message.toLowerCase().includes("email not confirmed") ?? false;
+      setNeedsVerification(unverified);
+      setError(unverified
+        ? "Please verify your email address before signing in."
+        : "The email or password is incorrect. Check your details and try again.");
       setBusy(false);
       return;
     }
@@ -112,7 +123,8 @@ function LoginPage() {
           </div>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
-            <Field label="Email address">
+            <label className="block">
+              <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-ink-muted">Email address</span>
               <input
                 type="email"
                 required
@@ -122,22 +134,30 @@ function LoginPage() {
                 className={inputClass}
                 placeholder="you@institution.edu.ng"
               />
-            </Field>
-            <Field label="Password">
-              <input
-                type="password"
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={inputClass}
-                placeholder="••••••••"
-              />
-            </Field>
+            </label>
+            <PasswordField
+              label="Password"
+              value={password}
+              onChange={setPassword}
+              autoComplete="current-password"
+              placeholder="••••••••"
+            />
+            <div className="-mt-1 text-right">
+              <a href="/reset-password" className="text-sm font-medium text-brand hover:opacity-80">Forgot password?</a>
+            </div>
             {error ? (
               <p role="alert" className="rounded-xl border border-flame/40 bg-flame-soft px-3 py-2 text-sm text-flame">
                 {error}
               </p>
+            ) : null}
+            {needsVerification ? (
+              <Link
+                to="/verify-email"
+                search={{ email: email.trim(), role: hint ?? undefined }}
+                className="block text-sm font-medium text-brand hover:opacity-80"
+              >
+                Resend verification email
+              </Link>
             ) : null}
             <button type="submit" disabled={busy} className={`${btnPrimary} w-full`}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : null}
