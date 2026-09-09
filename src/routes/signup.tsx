@@ -4,6 +4,7 @@ import { Loader2, MailCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { isAppRole, ROLE_HOME, ROLE_LABELS, type AppRole } from "@/lib/roles";
 import { btnPrimary, Field, inputClass } from "@/components/dashboard/kit";
+import { PasswordField } from "@/components/auth/PasswordField";
 
 type Search = { role?: string };
 
@@ -33,6 +34,7 @@ function SignupPage() {
   const [institution, setInstitution] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [confirmSent, setConfirmSent] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -42,6 +44,10 @@ function SignupPage() {
     setError(null);
     if (password.length < 6) {
       setError("Password must be at least 6 characters.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
       return;
     }
     setBusy(true);
@@ -58,11 +64,11 @@ function SignupPage() {
       setError(signUpError.message);
       return;
     }
-    if (data.session) {
+    if (data.session?.user.email_confirmed_at) {
       navigate({ to: ROLE_HOME[role], replace: true });
       return;
     }
-    setConfirmSent(true);
+    navigate({ to: "/verify-email", search: { email: email.trim(), role }, replace: true });
   }
 
   if (confirmSent) {
@@ -77,9 +83,7 @@ function SignupPage() {
             We sent a confirmation link to <span className="font-medium text-ink">{email}</span>. Confirm your
             address, then sign in to open your {ROLE_LABELS[role]} dashboard.
           </p>
-          <Link to="/login" className={`${btnPrimary} mt-6`}>
-            Go to sign in
-          </Link>
+          <Link to="/verify-email" search={{ email, role }} className={`${btnPrimary} mt-6`}>Open verification status</Link>
         </div>
       </div>
     );
@@ -136,9 +140,26 @@ function SignupPage() {
             <Field label="Email address">
               <input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} placeholder="you@institution.edu.ng" />
             </Field>
-            <Field label="Password">
-              <input type="password" required autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} placeholder="At least 6 characters" />
-            </Field>
+            <PasswordField
+              label="Password"
+              value={password}
+              onChange={setPassword}
+              autoComplete="new-password"
+              placeholder="At least 6 characters"
+            />
+            {password.length > 0 ? (
+              <p className={`-mt-2 text-xs ${password.length >= 6 ? "text-emerald" : "text-flame"}`}>
+                {password.length >= 6 ? "Password length requirement met." : "Password needs at least 6 characters."}
+              </p>
+            ) : null}
+            <PasswordField
+              label="Confirm password"
+              value={confirmPassword}
+              onChange={setConfirmPassword}
+              autoComplete="new-password"
+              placeholder="Enter your password again"
+              error={confirmPassword.length > 0 && confirmPassword !== password ? "Passwords do not match." : undefined}
+            />
             {error ? (
               <p role="alert" className="rounded-xl border border-flame/40 bg-flame-soft px-3 py-2 text-sm text-flame">
                 {error}
