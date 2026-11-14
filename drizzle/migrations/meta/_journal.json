@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794648114984,
+      "tag": "0000_account_profile_and_photo_access",
+      "breakpoints": true
+    }
+  ]
+}
