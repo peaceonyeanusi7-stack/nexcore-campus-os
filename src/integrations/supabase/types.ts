@@ -571,6 +571,7 @@ export type Database = {
           institution: string
           institution_id: string | null
           matric_number: string | null
+          phone: string | null
           updated_at: string
         }
         Insert: {
@@ -583,6 +584,7 @@ export type Database = {
           institution?: string
           institution_id?: string | null
           matric_number?: string | null
+          phone?: string | null
           updated_at?: string
         }
         Update: {
@@ -595,6 +597,7 @@ export type Database = {
           institution?: string
           institution_id?: string | null
           matric_number?: string | null
+          phone?: string | null
           updated_at?: string
         }
         Relationships: [
