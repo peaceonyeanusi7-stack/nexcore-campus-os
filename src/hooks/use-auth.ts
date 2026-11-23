@@ -10,6 +10,9 @@ export type Profile = {
   institution: string;
   department: string | null;
   matric_number: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  created_at: string;
 };
 
 export function useAuth() {
@@ -24,13 +27,13 @@ export function useAuth() {
     const [{ data: p }, { data: r }] = await Promise.all([
       supabase
         .from("profiles")
-        .select("id, full_name, email, institution, department, matric_number")
+        .select("id, full_name, email, institution, department, matric_number, phone, avatar_url, created_at")
         .eq("id", id)
         .maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", id).maybeSingle(),
     ]);
     setProfile((p as Profile) ?? null);
-    setRole(isAppRole(r?.role) ? (r!.role as AppRole) : null);
+    setRole(isAppRole(r?.role) ? r.role : null);
   }, []);
 
   useEffect(() => {
@@ -61,8 +64,10 @@ export function useAuth() {
   }, [load]);
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut({ scope: "global" });
+    if (error) return error;
     navigate({ to: "/login", replace: true });
+    return null;
   }, [navigate]);
 
   const refresh = useCallback(async () => {
